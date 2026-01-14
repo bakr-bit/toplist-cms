@@ -24,9 +24,11 @@ export async function GET(
   try {
     const { siteKey, slug } = await params;
 
-    const toplist = await prisma.toplist.findUnique({
+    // Case-insensitive slug matching
+    const toplist = await prisma.toplist.findFirst({
       where: {
-        siteKey_slug: { siteKey, slug },
+        siteKey: { equals: siteKey, mode: "insensitive" },
+        slug: { equals: slug, mode: "insensitive" },
       },
       include: {
         items: {
