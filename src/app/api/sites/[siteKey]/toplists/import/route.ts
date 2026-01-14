@@ -83,7 +83,7 @@ export async function POST(
     });
     const existingBrandIds = new Set(existingBrands.map((b) => b.brandId));
 
-    // Build reverse mapping: toplistId → pages[]
+    // Build mapping: toplistId → pages[] from pageMapping
     const toplistToPages: Record<string, string[]> = {};
     for (const [page, toplistIds] of Object.entries(pageMapping)) {
       for (const toplistId of toplistIds) {
@@ -92,36 +92,16 @@ export async function POST(
       }
     }
 
-    // Process each pageMapping entry as a toplist
-    for (const [slug, toplistIds] of Object.entries(pageMapping)) {
+    // Process each toplist definition (not pageMapping)
+    for (const [slug, toplistDef] of Object.entries(toplists)) {
       // Skip if toplist already exists
       if (existingSlugs.has(slug)) {
         results.skipped++;
         continue;
       }
 
-      // Get the first referenced toplist definition
-      const toplistId = toplistIds[0];
-      if (!toplistId) {
-        results.errors.push({ slug, error: "No toplist ID in pageMapping" });
-        continue;
-      }
-
-      // Warn if multiple toplists on one page
-      if (toplistIds.length > 1) {
-        results.warnings.push(
-          `Page "${slug}" has ${toplistIds.length} toplists, using first one (${toplistId})`
-        );
-      }
-
-      const toplistDef = toplists[toplistId];
-      if (!toplistDef) {
-        results.errors.push({
-          slug,
-          error: `Toplist definition "${toplistId}" not found`,
-        });
-        continue;
-      }
+      // Find which pages use this toplist
+      const pages = toplistToPages[slug] || [];
 
       try {
         // Prepare toplist items
@@ -154,13 +134,13 @@ export async function POST(
           })
           .filter((item): item is NonNullable<typeof item> => item !== null);
 
-        // Create toplist with items
+        // Create toplist with items and linked pages
         await prisma.toplist.create({
           data: {
             siteKey,
             slug,
             title: formatSlugToTitle(slug),
-            pages: toplistToPages[toplistId] || [slug],
+            pages,
             items: {
               create: toplistItems,
             },
@@ -183,7 +163,7 @@ export async function POST(
       skipped: results.skipped,
       errors: results.errors,
       warnings: results.warnings,
-      total: Object.keys(pageMapping).length,
+      total: Object.keys(toplists).length,
     });
   } catch (error) {
     console.error("Error importing toplists:", error);
