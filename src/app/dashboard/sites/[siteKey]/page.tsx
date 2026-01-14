@@ -12,6 +12,7 @@ interface Toplist {
   id: string;
   slug: string;
   title: string | null;
+  pages: string[];
   itemCount: number;
   updatedAt: string;
 }
@@ -174,9 +175,19 @@ export default function SiteDetailPage() {
                 <p className="text-sm text-zinc-500 font-mono mb-1">
                   /{toplist.slug}
                 </p>
-                <p className="text-sm text-zinc-500 mb-4">
+                <p className="text-sm text-zinc-500 mb-1">
                   {toplist.itemCount} item{toplist.itemCount !== 1 ? "s" : ""}
                 </p>
+                {toplist.pages.length > 0 && (
+                  <p
+                    className="text-xs text-zinc-400 mb-4 truncate"
+                    title={toplist.pages.join(", ")}
+                  >
+                    Pages: {toplist.pages.slice(0, 2).join(", ")}
+                    {toplist.pages.length > 2 && ` +${toplist.pages.length - 2}`}
+                  </p>
+                )}
+                {toplist.pages.length === 0 && <div className="mb-4" />}
                 <div className="flex gap-2">
                   <Link
                     href={`/dashboard/sites/${siteKey}/toplists/${toplist.slug}`}

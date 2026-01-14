@@ -44,6 +44,7 @@ export async function GET(
         id: t.id,
         slug: t.slug,
         title: t.title,
+        pages: t.pages,
         itemCount: t._count.items,
         createdAt: t.createdAt.toISOString(),
         updatedAt: t.updatedAt.toISOString(),

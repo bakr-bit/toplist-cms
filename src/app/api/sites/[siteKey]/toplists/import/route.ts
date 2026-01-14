@@ -83,6 +83,15 @@ export async function POST(
     });
     const existingBrandIds = new Set(existingBrands.map((b) => b.brandId));
 
+    // Build reverse mapping: toplistId → pages[]
+    const toplistToPages: Record<string, string[]> = {};
+    for (const [page, toplistIds] of Object.entries(pageMapping)) {
+      for (const toplistId of toplistIds) {
+        toplistToPages[toplistId] ??= [];
+        toplistToPages[toplistId].push(page);
+      }
+    }
+
     // Process each pageMapping entry as a toplist
     for (const [slug, toplistIds] of Object.entries(pageMapping)) {
       // Skip if toplist already exists
@@ -151,6 +160,7 @@ export async function POST(
             siteKey,
             slug,
             title: formatSlugToTitle(slug),
+            pages: toplistToPages[toplistId] || [slug],
             items: {
               create: toplistItems,
             },
