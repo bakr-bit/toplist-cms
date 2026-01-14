@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -20,8 +20,10 @@ interface Brand {
   website: string | null;
   defaultBonus: string | null;
   defaultAffiliateUrl: string | null;
+  defaultRating: number | null;
   terms: string | null;
   license: string | null;
+  description: string | null;
   pros: string[] | null;
   cons: string[] | null;
   usageCount: number;
@@ -32,6 +34,8 @@ export default function BrandsPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function loadBrands() {
     try {
@@ -77,11 +81,67 @@ export default function BrandsPage() {
     }
   }
 
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text);
+
+      const res = await fetch("/api/brands/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(json),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success(
+          `Imported ${data.imported} brands, skipped ${data.skipped} duplicates`
+        );
+        if (data.errors?.length > 0) {
+          console.error("Import errors:", data.errors);
+          toast.error(`${data.errors.length} brands failed to import`);
+        }
+        loadBrands();
+      } else {
+        toast.error(data.error || "Import failed");
+      }
+    } catch (err) {
+      toast.error("Invalid JSON file");
+      console.error(err);
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-zinc-900">Brands</h1>
-        <Button onClick={handleAdd}>Add Brand</Button>
+        <div className="flex gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleImport}
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+          >
+            {importing ? "Importing..." : "Import JSON"}
+          </Button>
+          <Button onClick={handleAdd}>Add Brand</Button>
+        </div>
       </div>
 
       {loading ? (

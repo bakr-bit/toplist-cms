@@ -13,8 +13,10 @@ model Brand {
   website             String?
   defaultBonus        String?
   defaultAffiliateUrl String?
+  defaultRating       Decimal? @db.Decimal(3, 1)
   terms               String?
   license             String?
+  description         String?
   pros                Json?
   cons                Json?
   createdAt           DateTime @default(now())

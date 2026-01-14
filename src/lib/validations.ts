@@ -12,8 +12,10 @@ export const createBrandSchema = z.object({
   website: z.string().url().optional().nullable(),
   defaultBonus: z.string().max(500).optional().nullable(),
   defaultAffiliateUrl: z.string().url().optional().nullable(),
+  defaultRating: z.number().min(0).max(10).optional().nullable(),
   terms: z.string().max(500).optional().nullable(),
   license: z.string().max(100).optional().nullable(),
+  description: z.string().optional().nullable(),
   pros: z.array(z.string()).optional().nullable(),
   cons: z.array(z.string()).optional().nullable(),
 });
@@ -24,8 +26,10 @@ export const updateBrandSchema = z.object({
   website: z.string().url().optional().nullable(),
   defaultBonus: z.string().max(500).optional().nullable(),
   defaultAffiliateUrl: z.string().url().optional().nullable(),
+  defaultRating: z.number().min(0).max(10).optional().nullable(),
   terms: z.string().max(500).optional().nullable(),
   license: z.string().max(100).optional().nullable(),
+  description: z.string().optional().nullable(),
   pros: z.array(z.string()).optional().nullable(),
   cons: z.array(z.string()).optional().nullable(),
 });

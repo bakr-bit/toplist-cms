@@ -58,10 +58,15 @@ export async function GET(
       affiliateUrl: item.affiliateUrl || item.brand.defaultAffiliateUrl,
       reviewUrl: item.reviewUrl,
       bonus: item.bonus || item.brand.defaultBonus,
-      rating: item.rating ? Number(item.rating) : null,
+      rating: item.rating
+        ? Number(item.rating)
+        : item.brand.defaultRating
+          ? Number(item.brand.defaultRating)
+          : null,
       cta: item.cta,
       terms: item.termsOverride || item.brand.terms,
       license: item.licenseOverride || item.brand.license,
+      description: item.brand.description,
       pros: item.prosOverride || item.brand.pros,
       cons: item.consOverride || item.brand.cons,
     }));

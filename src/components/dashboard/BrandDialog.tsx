@@ -19,8 +19,10 @@ interface Brand {
   website: string | null;
   defaultBonus: string | null;
   defaultAffiliateUrl: string | null;
+  defaultRating: number | null;
   terms: string | null;
   license: string | null;
+  description: string | null;
   pros: string[] | null;
   cons: string[] | null;
 }
@@ -50,8 +52,12 @@ export function BrandDialog({
   const [defaultAffiliateUrl, setDefaultAffiliateUrl] = useState(
     brand?.defaultAffiliateUrl || ""
   );
+  const [defaultRating, setDefaultRating] = useState<string>(
+    brand?.defaultRating?.toString() || ""
+  );
   const [terms, setTerms] = useState(brand?.terms || "");
   const [license, setLicense] = useState(brand?.license || "");
+  const [description, setDescription] = useState(brand?.description || "");
   const [pros, setPros] = useState(brand?.pros?.join("\n") || "");
   const [cons, setCons] = useState(brand?.cons?.join("\n") || "");
 
@@ -64,8 +70,10 @@ export function BrandDialog({
       setWebsite(brand?.website || "");
       setDefaultBonus(brand?.defaultBonus || "");
       setDefaultAffiliateUrl(brand?.defaultAffiliateUrl || "");
+      setDefaultRating(brand?.defaultRating?.toString() || "");
       setTerms(brand?.terms || "");
       setLicense(brand?.license || "");
+      setDescription(brand?.description || "");
       setPros(brand?.pros?.join("\n") || "");
       setCons(brand?.cons?.join("\n") || "");
       setError("");
@@ -96,8 +104,10 @@ export function BrandDialog({
         website: website || null,
         defaultBonus: defaultBonus || null,
         defaultAffiliateUrl: defaultAffiliateUrl || null,
+        defaultRating: defaultRating ? parseFloat(defaultRating) : null,
         terms: terms || null,
         license: license || null,
+        description: description || null,
         pros: textToArray(pros),
         cons: textToArray(cons),
       };
@@ -218,6 +228,29 @@ export function BrandDialog({
               value={license}
               onChange={(e) => setLicense(e.target.value)}
               placeholder="e.g. MGA, Curacao"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="defaultRating">Default Rating (0-10)</Label>
+            <Input
+              id="defaultRating"
+              type="number"
+              min="0"
+              max="10"
+              step="0.1"
+              value={defaultRating}
+              onChange={(e) => setDefaultRating(e.target.value)}
+              placeholder="e.g. 8.5"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Brand description..."
+              rows={3}
             />
           </div>
           <div className="space-y-2">
