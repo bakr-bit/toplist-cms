@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToplistDialog } from "@/components/dashboard/ToplistDialog";
 import { toast } from "sonner";
@@ -32,7 +33,21 @@ export default function SiteDetailPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [search, setSearch] = useState("");
+  const [expandedPages, setExpandedPages] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Filter toplists by page name search
+  const filteredToplists = useMemo(() => {
+    if (!site || !search.trim()) return site?.toplists || [];
+    const query = search.toLowerCase();
+    return site.toplists.filter(
+      (t) =>
+        t.slug.toLowerCase().includes(query) ||
+        t.title?.toLowerCase().includes(query) ||
+        t.pages.some((p) => p.toLowerCase().includes(query))
+    );
+  }, [site, search]);
 
   async function loadSite() {
     try {
@@ -163,51 +178,83 @@ export default function SiteDetailPage() {
           No toplists yet. Create your first one!
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {site.toplists.map((toplist) => (
-            <Card key={toplist.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">
-                  {toplist.title || toplist.slug}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-zinc-500 font-mono mb-1">
-                  /{toplist.slug}
-                </p>
-                <p className="text-sm text-zinc-500 mb-1">
-                  {toplist.itemCount} item{toplist.itemCount !== 1 ? "s" : ""}
-                </p>
-                {toplist.pages.length > 0 && (
-                  <p
-                    className="text-xs text-zinc-400 mb-4 truncate"
-                    title={toplist.pages.join(", ")}
-                  >
-                    Pages: {toplist.pages.slice(0, 2).join(", ")}
-                    {toplist.pages.length > 2 && ` +${toplist.pages.length - 2}`}
-                  </p>
-                )}
-                {toplist.pages.length === 0 && <div className="mb-4" />}
-                <div className="flex gap-2">
-                  <Link
-                    href={`/dashboard/sites/${siteKey}/toplists/${toplist.slug}`}
-                  >
-                    <Button variant="outline" size="sm">
-                      Edit
-                    </Button>
-                  </Link>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteToplist(toplist.slug)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <>
+          <div className="mb-4">
+            <Input
+              placeholder="Search by page name, toplist slug, or title..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-md"
+            />
+          </div>
+          {filteredToplists.length === 0 ? (
+            <div className="text-zinc-500">
+              No toplists found matching &quot;{search}&quot;
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {filteredToplists.map((toplist) => (
+                <Card key={toplist.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">
+                      {toplist.title || toplist.slug}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-zinc-500 font-mono mb-1">
+                      /{toplist.slug}
+                    </p>
+                    <p className="text-sm text-zinc-500 mb-1">
+                      {toplist.itemCount} item{toplist.itemCount !== 1 ? "s" : ""}
+                    </p>
+                    {toplist.pages.length > 0 && (
+                      <div className="mb-4">
+                        <button
+                          onClick={() =>
+                            setExpandedPages(
+                              expandedPages === toplist.id ? null : toplist.id
+                            )
+                          }
+                          className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          {toplist.pages.length} page
+                          {toplist.pages.length !== 1 ? "s" : ""}
+                          {expandedPages === toplist.id ? " ▲" : " ▼"}
+                        </button>
+                        {expandedPages === toplist.id && (
+                          <div className="mt-2 p-2 bg-zinc-50 rounded text-xs text-zinc-600 max-h-32 overflow-y-auto">
+                            {toplist.pages.map((page) => (
+                              <div key={page} className="py-0.5">
+                                /{page}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {toplist.pages.length === 0 && <div className="mb-4" />}
+                    <div className="flex gap-2">
+                      <Link
+                        href={`/dashboard/sites/${siteKey}/toplists/${toplist.slug}`}
+                      >
+                        <Button variant="outline" size="sm">
+                          Edit
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteToplist(toplist.slug)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <ToplistDialog
