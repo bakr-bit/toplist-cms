@@ -47,6 +47,7 @@ model Toplist {
   items ToplistItem[]
 
   @@unique([siteKey, slug])
+  @@index([siteKey])
 }
 
 model ToplistItem {
@@ -69,6 +70,8 @@ model ToplistItem {
   brand   Brand   @relation(fields: [brandId], references: [brandId])
 
   @@unique([toplistId, position])
+  @@index([toplistId])
+  @@index([brandId])
 }
 
 model User {

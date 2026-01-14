@@ -50,7 +50,15 @@ export async function POST(
       return NextResponse.json({ error: "Site not found" }, { status: 404 });
     }
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON format" },
+        { status: 400 }
+      );
+    }
 
     // Validate JSON structure
     const validation = importToplistSchema.safeParse(body);

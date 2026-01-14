@@ -120,26 +120,36 @@ export async function DELETE(
 
     const { brandId } = await params;
 
-    // Check if brand is used in any toplist
-    const usageCount = await prisma.toplistItem.count({
-      where: { brandId },
-    });
+    // Use transaction to atomically check usage and delete
+    try {
+      await prisma.$transaction(async (tx) => {
+        const usageCount = await tx.toplistItem.count({
+          where: { brandId },
+        });
 
-    if (usageCount > 0) {
-      return NextResponse.json(
-        {
-          error: "Cannot delete brand that is used in toplists",
-          usageCount,
-        },
-        { status: 409 }
-      );
+        if (usageCount > 0) {
+          throw new Error(`BRAND_IN_USE:${usageCount}`);
+        }
+
+        await tx.brand.delete({
+          where: { brandId },
+        });
+      });
+
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("BRAND_IN_USE:")) {
+        const usageCount = parseInt(error.message.split(":")[1], 10);
+        return NextResponse.json(
+          {
+            error: "Cannot delete brand that is used in toplists",
+            usageCount,
+          },
+          { status: 409 }
+        );
+      }
+      throw error;
     }
-
-    await prisma.brand.delete({
-      where: { brandId },
-    });
-
-    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting brand:", error);
     return NextResponse.json(

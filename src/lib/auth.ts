@@ -13,10 +13,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         try {
-          console.log("[Auth] Authorize called with email:", credentials?.email);
-
           if (!credentials?.email || !credentials?.password) {
-            console.log("[Auth] Missing credentials");
             return null;
           }
 
@@ -24,10 +21,7 @@ export const authOptions: NextAuthOptions = {
             where: { email: credentials.email },
           });
 
-          console.log("[Auth] User found:", !!user);
-
           if (!user) {
-            console.log("[Auth] No user found for email:", credentials.email);
             return null;
           }
 
@@ -35,8 +29,6 @@ export const authOptions: NextAuthOptions = {
             credentials.password,
             user.passwordHash
           );
-
-          console.log("[Auth] Password valid:", isPasswordValid);
 
           if (!isPasswordValid) {
             return null;
@@ -47,8 +39,7 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name,
           };
-        } catch (error) {
-          console.error("[Auth] Error in authorize:", error);
+        } catch {
           return null;
         }
       },
