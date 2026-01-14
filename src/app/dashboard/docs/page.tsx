@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Highlight, themes } from "prism-react-renderer";
 import { toast } from "sonner";
 
 function CopyButton({ text }: { text: string }) {
@@ -24,12 +25,35 @@ function CopyButton({ text }: { text: string }) {
 }
 
 function CodeBlock({ code, language }: { code: string; language: string }) {
+  // Map language names to Prism language keys
+  const langMap: Record<string, string> = {
+    env: "bash",
+    typescript: "tsx",
+    javascript: "jsx",
+    json: "json",
+    tsx: "tsx",
+  };
+  const prismLang = langMap[language] || language;
+
   return (
     <div className="relative mt-2 mb-4">
-      <pre className="overflow-x-auto rounded-lg bg-zinc-900 p-4 text-sm text-zinc-100">
-        <code>{code}</code>
-      </pre>
-      <CopyButton text={code} />
+      <Highlight theme={themes.nightOwl} code={code.trim()} language={prismLang}>
+        {({ style, tokens, getLineProps, getTokenProps }) => (
+          <pre
+            className="overflow-x-auto rounded-lg p-4 text-sm"
+            style={{ ...style, backgroundColor: "#0d1117" }}
+          >
+            {tokens.map((line, i) => (
+              <div key={i} {...getLineProps({ line })}>
+                {line.map((token, key) => (
+                  <span key={key} {...getTokenProps({ token })} />
+                ))}
+              </div>
+            ))}
+          </pre>
+        )}
+      </Highlight>
+      <CopyButton text={code.trim()} />
       <span className="absolute left-2 top-2 text-xs text-zinc-500">
         {language}
       </span>
