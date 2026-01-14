@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,8 @@ export default function SiteDetailPage() {
   const [site, setSite] = useState<Site | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function loadSite() {
     try {
@@ -68,6 +70,50 @@ export default function SiteDetailPage() {
     }
   }
 
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text);
+
+      const res = await fetch(`/api/sites/${siteKey}/toplists/import`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(json),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success(
+          `Imported ${data.imported} toplists, skipped ${data.skipped} existing`
+        );
+        if (data.warnings?.length > 0) {
+          console.warn("Import warnings:", data.warnings);
+          toast.warning(`${data.warnings.length} warnings (see console)`);
+        }
+        if (data.errors?.length > 0) {
+          console.error("Import errors:", data.errors);
+          toast.error(`${data.errors.length} toplists failed to import`);
+        }
+        loadSite();
+      } else {
+        toast.error(data.error || "Import failed");
+      }
+    } catch (err) {
+      toast.error("Invalid JSON file");
+      console.error(err);
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }
+
   if (loading) {
     return <div className="text-zinc-500">Loading...</div>;
   }
@@ -92,7 +138,23 @@ export default function SiteDetailPage() {
           <h1 className="text-2xl font-bold text-zinc-900">{site.name}</h1>
           <p className="text-zinc-500">{site.domain}</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>Add Toplist</Button>
+        <div className="flex gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleImport}
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+          >
+            {importing ? "Importing..." : "Import JSON"}
+          </Button>
+          <Button onClick={() => setDialogOpen(true)}>Add Toplist</Button>
+        </div>
       </div>
 
       {site.toplists.length === 0 ? (
