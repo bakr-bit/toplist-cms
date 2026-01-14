@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 interface ToplistItem {
   id: string;
@@ -187,12 +188,13 @@ function SortableItem({
               placeholder="e.g. Play Now"
             />
           </div>
-          <div>
-            <Label className="text-xs">Logo Override URL</Label>
-            <Input
+          <div className="lg:col-span-2">
+            <Label className="text-xs">Logo Override</Label>
+            <ImageUpload
               value={item.logoOverride || ""}
-              onChange={(e) => onUpdate(item.id, "logoOverride", e.target.value || null)}
-              placeholder="https://..."
+              onChange={(url) => onUpdate(item.id, "logoOverride", url || null)}
+              type="toplist-item"
+              identifier={`${item.brandId}-${item.id}`}
             />
           </div>
           <div>

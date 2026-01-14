@@ -73,7 +73,17 @@ export default function SitesPage() {
           {sites.map((site) => (
             <Card key={site.siteKey} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg">{site.name}</CardTitle>
+                <div className="flex items-center gap-3">
+                  <img
+                    src={`https://www.google.com/s2/favicons?domain=${site.domain}&sz=32`}
+                    alt=""
+                    className="h-6 w-6 rounded"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                  <CardTitle className="text-lg">{site.name}</CardTitle>
+                </div>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-zinc-500 mb-1">{site.domain}</p>

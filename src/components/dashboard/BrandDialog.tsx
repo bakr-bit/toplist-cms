@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 interface Brand {
   brandId: string;
@@ -174,13 +175,12 @@ export function BrandDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="defaultLogo">Logo URL</Label>
-            <Input
-              id="defaultLogo"
-              type="url"
+            <Label>Logo</Label>
+            <ImageUpload
               value={defaultLogo}
-              onChange={(e) => setDefaultLogo(e.target.value)}
-              placeholder="https://..."
+              onChange={setDefaultLogo}
+              type="brand"
+              identifier={brandId || "new-brand"}
             />
           </div>
           <div className="space-y-2">
