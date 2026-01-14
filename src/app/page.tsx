@@ -1,64 +1,124 @@
-import Image from "next/image";
-
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 py-12 px-4">
+      <main className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+          Toplist API
+        </h1>
+        <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-8">
+          Centralized toplist management for your sites
+        </p>
+
+        <section className="bg-white dark:bg-zinc-800 rounded-lg shadow-sm p-6 mb-6">
+          <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
+            Public Endpoint
+          </h2>
+          <div className="bg-zinc-100 dark:bg-zinc-900 rounded p-4 font-mono text-sm mb-4">
+            <span className="text-green-600 dark:text-green-400">GET</span>{" "}
+            /api/sites/{"{siteKey}"}/toplists/{"{slug}"}
+          </div>
+          <p className="text-zinc-600 dark:text-zinc-400 mb-4">
+            Returns a toplist with all items for consumption by client sites.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          <details className="text-sm">
+            <summary className="cursor-pointer text-zinc-700 dark:text-zinc-300 font-medium">
+              Response Example
+            </summary>
+            <pre className="bg-zinc-100 dark:bg-zinc-900 rounded p-4 mt-2 overflow-x-auto">
+{`{
+  "siteKey": "cazinou-io",
+  "slug": "main",
+  "updatedAt": "2026-01-14T10:00:00Z",
+  "items": [
+    {
+      "brandId": "velobet-casino",
+      "name": "VeloBet Casino",
+      "logo": "/media/velobet.webp",
+      "affiliateUrl": "https://...",
+      "reviewUrl": "/reviews/velobet",
+      "bonus": "330% up to 10,000 RON",
+      "rating": 8.8,
+      "cta": "Play Now"
+    }
+  ]
+}`}
+            </pre>
+          </details>
+        </section>
+
+        <section className="bg-white dark:bg-zinc-800 rounded-lg shadow-sm p-6 mb-6">
+          <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
+            Management Endpoints
+          </h2>
+          <p className="text-zinc-600 dark:text-zinc-400 mb-4">
+            All management endpoints require authentication via session cookie.
+          </p>
+
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-medium text-zinc-800 dark:text-zinc-200 mb-2">
+                Brands
+              </h3>
+              <div className="bg-zinc-100 dark:bg-zinc-900 rounded p-3 font-mono text-sm space-y-1">
+                <div><span className="text-green-600">GET</span> /api/brands</div>
+                <div><span className="text-blue-600">POST</span> /api/brands</div>
+                <div><span className="text-green-600">GET</span> /api/brands/{"{brandId}"}</div>
+                <div><span className="text-yellow-600">PUT</span> /api/brands/{"{brandId}"}</div>
+                <div><span className="text-red-600">DELETE</span> /api/brands/{"{brandId}"}</div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-medium text-zinc-800 dark:text-zinc-200 mb-2">
+                Sites
+              </h3>
+              <div className="bg-zinc-100 dark:bg-zinc-900 rounded p-3 font-mono text-sm space-y-1">
+                <div><span className="text-green-600">GET</span> /api/sites</div>
+                <div><span className="text-blue-600">POST</span> /api/sites</div>
+                <div><span className="text-green-600">GET</span> /api/sites/{"{siteKey}"}</div>
+                <div><span className="text-yellow-600">PUT</span> /api/sites/{"{siteKey}"}</div>
+                <div><span className="text-red-600">DELETE</span> /api/sites/{"{siteKey}"}</div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-medium text-zinc-800 dark:text-zinc-200 mb-2">
+                Toplists
+              </h3>
+              <div className="bg-zinc-100 dark:bg-zinc-900 rounded p-3 font-mono text-sm space-y-1">
+                <div><span className="text-green-600">GET</span> /api/sites/{"{siteKey}"}/toplists</div>
+                <div><span className="text-blue-600">POST</span> /api/sites/{"{siteKey}"}/toplists</div>
+                <div><span className="text-yellow-600">PUT</span> /api/sites/{"{siteKey}"}/toplists/{"{slug}"}</div>
+                <div><span className="text-red-600">DELETE</span> /api/sites/{"{siteKey}"}/toplists/{"{slug}"}</div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-medium text-zinc-800 dark:text-zinc-200 mb-2">
+                Toplist Items
+              </h3>
+              <div className="bg-zinc-100 dark:bg-zinc-900 rounded p-3 font-mono text-sm">
+                <div><span className="text-yellow-600">PUT</span> /api/sites/{"{siteKey}"}/toplists/{"{slug}"}/items</div>
+              </div>
+              <p className="text-zinc-500 dark:text-zinc-500 text-sm mt-2">
+                Replaces all items in the toplist. Order is determined by array index.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-white dark:bg-zinc-800 rounded-lg shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
+            Getting Started
+          </h2>
+          <ol className="list-decimal list-inside space-y-2 text-zinc-600 dark:text-zinc-400">
+            <li>Configure your Supabase database URL in <code className="bg-zinc-100 dark:bg-zinc-900 px-1 rounded">.env</code></li>
+            <li>Run <code className="bg-zinc-100 dark:bg-zinc-900 px-1 rounded">npm run db:migrate</code> to create tables</li>
+            <li>Run <code className="bg-zinc-100 dark:bg-zinc-900 px-1 rounded">npm run db:seed</code> to create admin user</li>
+            <li>Start the server with <code className="bg-zinc-100 dark:bg-zinc-900 px-1 rounded">npm run dev</code></li>
+            <li>Login at <code className="bg-zinc-100 dark:bg-zinc-900 px-1 rounded">/api/auth/signin</code></li>
+          </ol>
+        </section>
       </main>
     </div>
   );

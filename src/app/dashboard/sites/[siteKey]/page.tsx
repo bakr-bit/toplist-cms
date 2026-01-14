@@ -1,0 +1,151 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ToplistDialog } from "@/components/dashboard/ToplistDialog";
+import { toast } from "sonner";
+
+interface Toplist {
+  id: string;
+  slug: string;
+  title: string | null;
+  itemCount: number;
+  updatedAt: string;
+}
+
+interface Site {
+  siteKey: string;
+  domain: string;
+  name: string;
+  toplists: Toplist[];
+}
+
+export default function SiteDetailPage() {
+  const params = useParams();
+  const siteKey = params.siteKey as string;
+
+  const [site, setSite] = useState<Site | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  async function loadSite() {
+    try {
+      const res = await fetch(`/api/sites/${siteKey}`);
+      if (res.ok) {
+        setSite(await res.json());
+      } else {
+        toast.error("Site not found");
+      }
+    } catch {
+      toast.error("Failed to load site");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadSite();
+  }, [siteKey]);
+
+  async function handleDeleteToplist(slug: string) {
+    if (!confirm("Are you sure you want to delete this toplist?")) return;
+
+    try {
+      const res = await fetch(`/api/sites/${siteKey}/toplists/${slug}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        toast.success("Toplist deleted");
+        loadSite();
+      } else {
+        toast.error("Failed to delete toplist");
+      }
+    } catch {
+      toast.error("Failed to delete toplist");
+    }
+  }
+
+  if (loading) {
+    return <div className="text-zinc-500">Loading...</div>;
+  }
+
+  if (!site) {
+    return <div className="text-zinc-500">Site not found</div>;
+  }
+
+  return (
+    <div>
+      <div className="mb-6">
+        <Link
+          href="/dashboard/sites"
+          className="text-sm text-zinc-500 hover:text-zinc-900"
+        >
+          ← Back to Sites
+        </Link>
+      </div>
+
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-zinc-900">{site.name}</h1>
+          <p className="text-zinc-500">{site.domain}</p>
+        </div>
+        <Button onClick={() => setDialogOpen(true)}>Add Toplist</Button>
+      </div>
+
+      {site.toplists.length === 0 ? (
+        <div className="text-zinc-500">
+          No toplists yet. Create your first one!
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {site.toplists.map((toplist) => (
+            <Card key={toplist.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">
+                  {toplist.title || toplist.slug}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-zinc-500 font-mono mb-1">
+                  /{toplist.slug}
+                </p>
+                <p className="text-sm text-zinc-500 mb-4">
+                  {toplist.itemCount} item{toplist.itemCount !== 1 ? "s" : ""}
+                </p>
+                <div className="flex gap-2">
+                  <Link
+                    href={`/dashboard/sites/${siteKey}/toplists/${toplist.slug}`}
+                  >
+                    <Button variant="outline" size="sm">
+                      Edit
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteToplist(toplist.slug)}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <ToplistDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        siteKey={siteKey}
+        onSuccess={() => {
+          loadSite();
+          toast.success("Toplist created");
+        }}
+      />
+    </div>
+  );
+}

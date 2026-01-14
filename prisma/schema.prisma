@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Brand {
+  brandId             String   @id
+  name                String
+  defaultLogo         String?
+  website             String?
+  defaultBonus        String?
+  defaultAffiliateUrl String?
+  terms               String?
+  license             String?
+  pros                Json?
+  cons                Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  toplistItems ToplistItem[]
+}
+
+model Site {
+  siteKey   String   @id
+  domain    String   @unique
+  name      String
+  createdAt DateTime @default(now())
+
+  toplists Toplist[]
+}
+
+model Toplist {
+  id        String   @id @default(uuid())
+  siteKey   String
+  slug      String
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  site  Site          @relation(fields: [siteKey], references: [siteKey], onDelete: Cascade)
+  items ToplistItem[]
+
+  @@unique([siteKey, slug])
+}
+
+model ToplistItem {
+  id              String   @id @default(uuid())
+  toplistId       String
+  brandId         String
+  position        Int
+  bonus           String?
+  affiliateUrl    String?
+  reviewUrl       String?
+  rating          Decimal? @db.Decimal(3, 1)
+  cta             String?
+  logoOverride    String?
+  termsOverride   String?
+  licenseOverride String?
+  prosOverride    Json?
+  consOverride    Json?
+
+  toplist Toplist @relation(fields: [toplistId], references: [id], onDelete: Cascade)
+  brand   Brand   @relation(fields: [brandId], references: [brandId])
+
+  @@unique([toplistId, position])
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+}
