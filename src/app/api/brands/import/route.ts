@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { z } from "zod";
+import { uploadToR2 } from "@/lib/r2";
+import { processImage, generateImageKey } from "@/lib/image";
 
 // Schema for validating import JSON
 const importBrandSchema = z.object({
@@ -15,7 +17,36 @@ const importBrandSchema = z.object({
   pros: z.array(z.string()).optional(),
   cons: z.array(z.string()).optional(),
   description: z.string().optional(),
+  logo: z.string().url().optional(),
 });
+
+// Fetch image from URL and upload to R2
+async function fetchAndUploadLogo(
+  logoUrl: string,
+  brandId: string
+): Promise<string | null> {
+  try {
+    const response = await fetch(logoUrl);
+    if (!response.ok) return null;
+
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.startsWith("image/")) return null;
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Process and upload to R2
+    const { buffer: processedBuffer, contentType: newContentType } =
+      await processImage(buffer);
+    const key = generateImageKey("brand", brandId);
+    const r2Url = await uploadToR2(key, processedBuffer, newContentType);
+
+    return r2Url;
+  } catch (error) {
+    console.error(`Failed to fetch/upload logo for ${brandId}:`, error);
+    return null;
+  }
+}
 
 const importSchema = z.object({
   version: z.string().optional(),
@@ -74,10 +105,17 @@ export async function POST(request: NextRequest) {
       }
 
       try {
+        // Fetch and upload logo if provided
+        let logoUrl: string | null = null;
+        if (data.logo) {
+          logoUrl = await fetchAndUploadLogo(data.logo, brandId);
+        }
+
         await prisma.brand.create({
           data: {
             brandId,
             name,
+            defaultLogo: logoUrl,
             defaultAffiliateUrl: data.affiliateUrl || null,
             defaultBonus: data.bonus || null,
             defaultRating: data.rating ?? null,
