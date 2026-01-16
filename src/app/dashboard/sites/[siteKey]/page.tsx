@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToplistDialog } from "@/components/dashboard/ToplistDialog";
+import { ToplistImportDialog } from "@/components/dashboard/ToplistImportDialog";
 import { toast } from "sonner";
 
 interface Toplist {
@@ -34,10 +35,9 @@ export default function SiteDetailPage() {
   const [site, setSite] = useState<Site | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [importing, setImporting] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [expandedPages, setExpandedPages] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Filter toplists by page name search
   const filteredToplists = useMemo(() => {
@@ -88,50 +88,6 @@ export default function SiteDetailPage() {
     }
   }
 
-  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setImporting(true);
-    try {
-      const text = await file.text();
-      const json = JSON.parse(text);
-
-      const res = await fetch(`/api/sites/${siteKey}/toplists/import`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(json),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        toast.success(
-          `Imported ${data.imported} toplists, skipped ${data.skipped} existing`
-        );
-        if (data.warnings?.length > 0) {
-          console.warn("Import warnings:", data.warnings);
-          toast.warning(`${data.warnings.length} warnings (see console)`);
-        }
-        if (data.errors?.length > 0) {
-          console.error("Import errors:", data.errors);
-          toast.error(`${data.errors.length} toplists failed to import`);
-        }
-        loadSite();
-      } else {
-        toast.error(data.error || "Import failed");
-      }
-    } catch (err) {
-      toast.error("Invalid JSON file");
-      console.error(err);
-    } finally {
-      setImporting(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }
-  }
-
   if (loading) {
     return <div className="text-zinc-500">Loading...</div>;
   }
@@ -178,19 +134,11 @@ export default function SiteDetailPage() {
           )}
         </div>
         <div className="flex gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json"
-            onChange={handleImport}
-            className="hidden"
-          />
           <Button
             variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={importing}
+            onClick={() => setImportDialogOpen(true)}
           >
-            {importing ? "Importing..." : "Import JSON"}
+            Import JSON
           </Button>
           <Button onClick={() => setDialogOpen(true)}>Add Toplist</Button>
         </div>
@@ -287,6 +235,24 @@ export default function SiteDetailPage() {
         onSuccess={() => {
           loadSite();
           toast.success("Toplist created");
+        }}
+      />
+
+      <ToplistImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        siteKey={siteKey}
+        onSuccess={(result) => {
+          loadSite();
+          toast.success(
+            `Imported ${result.imported} toplists, skipped ${result.skipped} existing`
+          );
+          if (result.warnings > 0) {
+            toast.warning(`${result.warnings} warnings (see console)`);
+          }
+          if (result.errors > 0) {
+            toast.error(`${result.errors} toplists failed to import`);
+          }
         }}
       />
     </div>
