@@ -67,10 +67,12 @@ interface Toplist {
 
 function SortableItem({
   item,
+  position,
   onUpdate,
   onRemove,
 }: {
   item: ToplistItem;
+  position: number;
   onUpdate: (id: string, field: string, value: string | number | string[] | null) => void;
   onRemove: (id: string) => void;
 }) {
@@ -107,6 +109,10 @@ function SortableItem({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
           </svg>
         </button>
+
+        <span className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 text-sm font-semibold text-zinc-600">
+          {position}
+        </span>
 
         {item.logoOverride || item.brandLogo ? (
           <img
@@ -475,10 +481,11 @@ export default function ToplistEditorPage() {
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={items} strategy={verticalListSortingStrategy}>
-            {items.map((item) => (
+            {items.map((item, index) => (
               <SortableItem
                 key={item.id}
                 item={item}
+                position={index + 1}
                 onUpdate={handleUpdateItem}
                 onRemove={handleRemoveItem}
               />
