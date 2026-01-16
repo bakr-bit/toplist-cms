@@ -26,6 +26,8 @@ export async function GET() {
         siteKey: s.siteKey,
         domain: s.domain,
         name: s.name,
+        geo: s.geo,
+        keywords: s.keywords,
         toplistCount: s._count.toplists,
         createdAt: s.createdAt.toISOString(),
       }))
@@ -78,6 +80,8 @@ export async function POST(request: NextRequest) {
         siteKey,
         domain: validation.data.domain,
         name: validation.data.name,
+        geo: validation.data.geo || null,
+        keywords: validation.data.keywords || [],
       },
     });
 

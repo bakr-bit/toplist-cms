@@ -39,6 +39,8 @@ export async function GET(
       siteKey: site.siteKey,
       domain: site.domain,
       name: site.name,
+      geo: site.geo,
+      keywords: site.keywords,
       createdAt: site.createdAt.toISOString(),
       toplists: site.toplists.map((t) => ({
         id: t.id,
@@ -81,9 +83,15 @@ export async function PUT(
       );
     }
 
+    // Transform null keywords to empty array for Prisma
+    const updateData = {
+      ...validation.data,
+      keywords: validation.data.keywords ?? undefined,
+    };
+
     const site = await prisma.site.update({
       where: { siteKey },
-      data: validation.data,
+      data: updateData,
     });
 
     return NextResponse.json(site);

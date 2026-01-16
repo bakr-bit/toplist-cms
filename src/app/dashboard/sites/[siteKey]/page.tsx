@@ -22,6 +22,8 @@ interface Site {
   siteKey: string;
   domain: string;
   name: string;
+  geo: string | null;
+  keywords: string[];
   toplists: Toplist[];
 }
 
@@ -153,6 +155,27 @@ export default function SiteDetailPage() {
         <div>
           <h1 className="text-2xl font-bold text-zinc-900">{site.name}</h1>
           <p className="text-zinc-500">{site.domain}</p>
+          {(site.geo || site.keywords?.length > 0) && (
+            <div className="flex items-center gap-3 mt-1">
+              {site.geo && (
+                <span className="text-sm text-zinc-500">
+                  <span className="text-zinc-400">GEO:</span> {site.geo}
+                </span>
+              )}
+              {site.keywords?.length > 0 && (
+                <div className="flex gap-1">
+                  {site.keywords.map((kw, i) => (
+                    <span
+                      key={i}
+                      className="text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded"
+                    >
+                      {kw}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
           <input

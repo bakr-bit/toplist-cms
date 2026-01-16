@@ -11,6 +11,8 @@ interface Site {
   siteKey: string;
   domain: string;
   name: string;
+  geo: string | null;
+  keywords: string[];
   toplistCount: number;
 }
 
@@ -87,6 +89,28 @@ export default function SitesPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-zinc-500 mb-1">{site.domain}</p>
+                {site.geo && (
+                  <p className="text-sm text-zinc-500 mb-1">
+                    <span className="text-zinc-400">GEO:</span> {site.geo}
+                  </p>
+                )}
+                {site.keywords && site.keywords.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {site.keywords.slice(0, 3).map((kw, i) => (
+                      <span
+                        key={i}
+                        className="text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded"
+                      >
+                        {kw}
+                      </span>
+                    ))}
+                    {site.keywords.length > 3 && (
+                      <span className="text-xs text-zinc-400">
+                        +{site.keywords.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                )}
                 <p className="text-sm text-zinc-500 mb-4">
                   {site.toplistCount} toplist{site.toplistCount !== 1 ? "s" : ""}
                 </p>

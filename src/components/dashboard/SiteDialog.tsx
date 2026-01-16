@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,8 @@ export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
   const [error, setError] = useState("");
   const [domain, setDomain] = useState("");
   const [name, setName] = useState("");
+  const [geo, setGeo] = useState("");
+  const [keywords, setKeywords] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,10 +32,21 @@ export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
     setLoading(true);
 
     try {
+      // Convert keywords textarea to array
+      const keywordsArray = keywords
+        .split("\n")
+        .map((k) => k.trim())
+        .filter((k) => k.length > 0);
+
       const res = await fetch("/api/sites", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domain: domain.toLowerCase(), name }),
+        body: JSON.stringify({
+          domain: domain.toLowerCase(),
+          name,
+          geo: geo || null,
+          keywords: keywordsArray.length > 0 ? keywordsArray : null,
+        }),
       });
 
       if (!res.ok) {
@@ -42,6 +56,8 @@ export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
 
       setDomain("");
       setName("");
+      setGeo("");
+      setKeywords("");
       onSuccess();
       onOpenChange(false);
     } catch (err) {
@@ -85,6 +101,26 @@ export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
               placeholder="e.g. Cazinou.io"
               required
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="geo">Target GEO</Label>
+            <Input
+              id="geo"
+              value={geo}
+              onChange={(e) => setGeo(e.target.value)}
+              placeholder="e.g. Romania, UK, US"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="keywords">Target Keywords</Label>
+            <Textarea
+              id="keywords"
+              value={keywords}
+              onChange={(e) => setKeywords(e.target.value)}
+              placeholder="One keyword per line"
+              rows={3}
+            />
+            <p className="text-xs text-zinc-500">Enter one keyword per line</p>
           </div>
           <div className="flex justify-end gap-2">
             <Button

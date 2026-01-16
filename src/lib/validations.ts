@@ -42,10 +42,14 @@ export const createSiteSchema = z.object({
     .max(253)
     .regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/, "Invalid domain format"),
   name: z.string().min(1).max(200),
+  geo: z.string().max(100).optional().nullable(),
+  keywords: z.array(z.string()).optional().nullable(),
 });
 
 export const updateSiteSchema = z.object({
   name: z.string().min(1).max(200).optional(),
+  geo: z.string().max(100).optional().nullable(),
+  keywords: z.array(z.string()).optional().nullable(),
 });
 
 // Toplist schemas
