@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createSiteSchema, domainToSiteKey } from "@/lib/validations";
@@ -26,8 +27,7 @@ export async function GET() {
         siteKey: s.siteKey,
         domain: s.domain,
         name: s.name,
-        geo: s.geo,
-        keywords: s.keywords,
+        serps: s.serps,
         toplistCount: s._count.toplists,
         createdAt: s.createdAt.toISOString(),
       }))
@@ -80,8 +80,7 @@ export async function POST(request: NextRequest) {
         siteKey,
         domain: validation.data.domain,
         name: validation.data.name,
-        geo: validation.data.geo || null,
-        keywords: validation.data.keywords || [],
+        serps: validation.data.serps ?? Prisma.DbNull,
       },
     });
 

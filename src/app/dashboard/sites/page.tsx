@@ -7,12 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteDialog } from "@/components/dashboard/SiteDialog";
 import { toast } from "sonner";
 
+interface Serp {
+  keyword: string;
+  geo: string;
+}
+
 interface Site {
   siteKey: string;
   domain: string;
   name: string;
-  geo: string | null;
-  keywords: string[];
+  serps: Serp[] | null;
   toplistCount: number;
 }
 
@@ -89,24 +93,23 @@ export default function SitesPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-zinc-500 mb-1">{site.domain}</p>
-                {site.geo && (
-                  <p className="text-sm text-zinc-500 mb-1">
-                    <span className="text-zinc-400">GEO:</span> {site.geo}
-                  </p>
-                )}
-                {site.keywords && site.keywords.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {site.keywords.slice(0, 3).map((kw, i) => (
+                {site.serps && site.serps.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {site.serps.slice(0, 3).map((serp, i) => (
                       <span
                         key={i}
-                        className="text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded"
+                        className="inline-flex items-center gap-1.5 text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded"
                       >
-                        {kw}
+                        <span
+                          className={`fflag fflag-${serp.geo} ff-sm`}
+                          title={serp.geo}
+                        />
+                        {serp.keyword}
                       </span>
                     ))}
-                    {site.keywords.length > 3 && (
+                    {site.serps.length > 3 && (
                       <span className="text-xs text-zinc-400">
-                        +{site.keywords.length - 3} more
+                        +{site.serps.length - 3} more
                       </span>
                     )}
                   </div>

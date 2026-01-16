@@ -19,12 +19,16 @@ interface Toplist {
   updatedAt: string;
 }
 
+interface Serp {
+  keyword: string;
+  geo: string;
+}
+
 interface Site {
   siteKey: string;
   domain: string;
   name: string;
-  geo: string | null;
-  keywords: string[];
+  serps: Serp[] | null;
   toplists: Toplist[];
 }
 
@@ -111,25 +115,20 @@ export default function SiteDetailPage() {
         <div>
           <h1 className="text-2xl font-bold text-zinc-900">{site.name}</h1>
           <p className="text-zinc-500">{site.domain}</p>
-          {(site.geo || site.keywords?.length > 0) && (
-            <div className="flex items-center gap-3 mt-1">
-              {site.geo && (
-                <span className="text-sm text-zinc-500">
-                  <span className="text-zinc-400">GEO:</span> {site.geo}
+          {site.serps && site.serps.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {site.serps.map((serp, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1.5 text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded"
+                >
+                  <span
+                    className={`fflag fflag-${serp.geo} ff-sm`}
+                    title={serp.geo}
+                  />
+                  {serp.keyword}
                 </span>
-              )}
-              {site.keywords?.length > 0 && (
-                <div className="flex gap-1">
-                  {site.keywords.map((kw, i) => (
-                    <span
-                      key={i}
-                      className="text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded"
-                    >
-                      {kw}
-                    </span>
-                  ))}
-                </div>
-              )}
+              ))}
             </div>
           )}
         </div>

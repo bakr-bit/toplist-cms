@@ -34,6 +34,12 @@ export const updateBrandSchema = z.object({
   cons: z.array(z.string()).optional().nullable(),
 });
 
+// SERP schema (keyword + geo pair)
+export const serpSchema = z.object({
+  keyword: z.string().min(1).max(500),
+  geo: z.string().length(2, "GEO must be a 2-letter country code").toUpperCase(),
+});
+
 // Site schemas
 export const createSiteSchema = z.object({
   domain: z
@@ -42,14 +48,12 @@ export const createSiteSchema = z.object({
     .max(253)
     .regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/, "Invalid domain format"),
   name: z.string().min(1).max(200),
-  geo: z.string().max(100).optional().nullable(),
-  keywords: z.array(z.string()).optional().nullable(),
+  serps: z.array(serpSchema).optional().nullable(),
 });
 
 export const updateSiteSchema = z.object({
   name: z.string().min(1).max(200).optional(),
-  geo: z.string().max(100).optional().nullable(),
-  keywords: z.array(z.string()).optional().nullable(),
+  serps: z.array(serpSchema).optional().nullable(),
 });
 
 // Toplist schemas
@@ -91,6 +95,7 @@ export function domainToSiteKey(domain: string): string {
 }
 
 // Types
+export type Serp = z.infer<typeof serpSchema>;
 export type CreateBrandInput = z.infer<typeof createBrandSchema>;
 export type UpdateBrandInput = z.infer<typeof updateBrandSchema>;
 export type CreateSiteInput = z.infer<typeof createSiteSchema>;

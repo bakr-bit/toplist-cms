@@ -4,13 +4,18 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Plus, X } from "lucide-react";
+
+interface Serp {
+  keyword: string;
+  geo: string;
+}
 
 interface SiteDialogProps {
   open: boolean;
@@ -23,8 +28,21 @@ export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
   const [error, setError] = useState("");
   const [domain, setDomain] = useState("");
   const [name, setName] = useState("");
-  const [geo, setGeo] = useState("");
-  const [keywords, setKeywords] = useState("");
+  const [serps, setSerps] = useState<Serp[]>([]);
+
+  function addSerp() {
+    setSerps([...serps, { keyword: "", geo: "" }]);
+  }
+
+  function removeSerp(index: number) {
+    setSerps(serps.filter((_, i) => i !== index));
+  }
+
+  function updateSerp(index: number, field: keyof Serp, value: string) {
+    const updated = [...serps];
+    updated[index] = { ...updated[index], [field]: value };
+    setSerps(updated);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,11 +50,13 @@ export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
     setLoading(true);
 
     try {
-      // Convert keywords textarea to array
-      const keywordsArray = keywords
-        .split("\n")
-        .map((k) => k.trim())
-        .filter((k) => k.length > 0);
+      // Filter out empty serps and uppercase geo codes
+      const validSerps = serps
+        .filter((s) => s.keyword.trim() && s.geo.trim())
+        .map((s) => ({
+          keyword: s.keyword.trim(),
+          geo: s.geo.trim().toUpperCase(),
+        }));
 
       const res = await fetch("/api/sites", {
         method: "POST",
@@ -44,8 +64,7 @@ export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
         body: JSON.stringify({
           domain: domain.toLowerCase(),
           name,
-          geo: geo || null,
-          keywords: keywordsArray.length > 0 ? keywordsArray : null,
+          serps: validSerps.length > 0 ? validSerps : null,
         }),
       });
 
@@ -56,8 +75,7 @@ export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
 
       setDomain("");
       setName("");
-      setGeo("");
-      setKeywords("");
+      setSerps([]);
       onSuccess();
       onOpenChange(false);
     } catch (err) {
@@ -69,7 +87,7 @@ export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Add Site</DialogTitle>
         </DialogHeader>
@@ -89,7 +107,7 @@ export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
               required
             />
             <p className="text-xs text-zinc-500">
-              Site key will be auto-generated (dots → dashes)
+              Site key will be auto-generated (dots to dashes)
             </p>
           </div>
           <div className="space-y-2">
@@ -103,24 +121,62 @@ export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="geo">Target GEO</Label>
-            <Input
-              id="geo"
-              value={geo}
-              onChange={(e) => setGeo(e.target.value)}
-              placeholder="e.g. Romania, UK, US"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="keywords">Target Keywords</Label>
-            <Textarea
-              id="keywords"
-              value={keywords}
-              onChange={(e) => setKeywords(e.target.value)}
-              placeholder="One keyword per line"
-              rows={3}
-            />
-            <p className="text-xs text-zinc-500">Enter one keyword per line</p>
+            <div className="flex items-center justify-between">
+              <Label>Target SERPs</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addSerp}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add SERP
+              </Button>
+            </div>
+            {serps.length === 0 ? (
+              <p className="text-sm text-zinc-500">
+                No SERPs added. Click &quot;Add SERP&quot; to track keyword rankings.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {serps.map((serp, index) => (
+                  <div key={index} className="flex gap-2 items-start">
+                    <div className="flex-1">
+                      <Input
+                        value={serp.keyword}
+                        onChange={(e) =>
+                          updateSerp(index, "keyword", e.target.value)
+                        }
+                        placeholder="Keyword"
+                      />
+                    </div>
+                    <div className="w-20">
+                      <Input
+                        value={serp.geo}
+                        onChange={(e) =>
+                          updateSerp(index, "geo", e.target.value)
+                        }
+                        placeholder="GEO"
+                        maxLength={2}
+                        className="uppercase"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeSerp(index)}
+                      className="shrink-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <p className="text-xs text-zinc-500">
+                  GEO: 2-letter country code (US, GB, RO, etc.)
+                </p>
+              </div>
+            )}
           </div>
           <div className="flex justify-end gap-2">
             <Button

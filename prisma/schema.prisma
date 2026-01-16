@@ -29,8 +29,7 @@ model Site {
   siteKey   String   @id
   domain    String   @unique
   name      String
-  geo       String?
-  keywords  String[]
+  serps     Json?
   createdAt DateTime @default(now())
 
   toplists Toplist[]

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { updateSiteSchema } from "@/lib/validations";
@@ -39,8 +40,7 @@ export async function GET(
       siteKey: site.siteKey,
       domain: site.domain,
       name: site.name,
-      geo: site.geo,
-      keywords: site.keywords,
+      serps: site.serps,
       createdAt: site.createdAt.toISOString(),
       toplists: site.toplists.map((t) => ({
         id: t.id,
@@ -83,11 +83,14 @@ export async function PUT(
       );
     }
 
-    // Transform null keywords to empty array for Prisma
-    const updateData = {
-      ...validation.data,
-      keywords: validation.data.keywords ?? undefined,
+    const updateData: Prisma.SiteUpdateInput = {
+      ...(validation.data.name && { name: validation.data.name }),
     };
+
+    // Handle serps field - use DbNull for null values
+    if (validation.data.serps !== undefined) {
+      updateData.serps = validation.data.serps ?? Prisma.DbNull;
+    }
 
     const site = await prisma.site.update({
       where: { siteKey },
