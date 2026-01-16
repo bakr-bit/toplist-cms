@@ -17,7 +17,7 @@ const importBrandSchema = z.object({
   pros: z.array(z.string()).optional(),
   cons: z.array(z.string()).optional(),
   description: z.string().optional(),
-  logo: z.string().url().optional(),
+  logo: z.string().optional(), // Can be full URL or relative path
 });
 
 // Fetch image from URL and upload to R2
@@ -51,6 +51,7 @@ async function fetchAndUploadLogo(
 const importSchema = z.object({
   version: z.string().optional(),
   extractedAt: z.string().optional(),
+  baseUrl: z.string().url().optional(), // Prepended to relative logo paths
   brands: z.record(z.string(), importBrandSchema),
 });
 
@@ -81,11 +82,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { brands } = validation.data;
+    const { brands, baseUrl } = validation.data;
     const results = {
       imported: 0,
       skipped: 0,
       errors: [] as { name: string; error: string }[],
+    };
+
+    // Helper to resolve logo URL (handles relative paths)
+    const resolveLogoUrl = (logo: string): string | null => {
+      if (!logo) return null;
+      if (logo.startsWith("http://") || logo.startsWith("https://")) {
+        return logo;
+      }
+      if (baseUrl && logo.startsWith("/")) {
+        return `${baseUrl}${logo}`;
+      }
+      return null; // Can't resolve relative path without baseUrl
+    };
+
+    // Try to auto-detect logo from common paths
+    const tryAutoDetectLogo = async (slug: string): Promise<string | null> => {
+      if (!baseUrl) return null;
+
+      const patterns = [
+        `/media/${slug}.webp`,
+        `/media/${slug}.png`,
+        `/media/${slug}.jpg`,
+        `/media/${slug}-logo.webp`,
+        `/media/${slug}-logo.png`,
+        `/images/${slug}.webp`,
+        `/images/${slug}.png`,
+      ];
+
+      for (const pattern of patterns) {
+        const url = `${baseUrl}${pattern}`;
+        try {
+          const res = await fetch(url, { method: "HEAD" });
+          if (res.ok) return url;
+        } catch {
+          // Continue to next pattern
+        }
+      }
+      return null;
     };
 
     // Get existing brand IDs to check for duplicates
@@ -105,10 +144,19 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        // Fetch and upload logo if provided
+        // Fetch and upload logo if provided, or try auto-detect
         let logoUrl: string | null = null;
+        let sourceLogoUrl: string | null = null;
+
         if (data.logo) {
-          logoUrl = await fetchAndUploadLogo(data.logo, brandId);
+          sourceLogoUrl = resolveLogoUrl(data.logo);
+        } else if (baseUrl) {
+          // Try auto-detect based on slug
+          sourceLogoUrl = await tryAutoDetectLogo(brandId);
+        }
+
+        if (sourceLogoUrl) {
+          logoUrl = await fetchAndUploadLogo(sourceLogoUrl, brandId);
         }
 
         await prisma.brand.create({
