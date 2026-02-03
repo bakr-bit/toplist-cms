@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { authOptions, isValidApiKey } from "@/lib/auth";
 import { createToplistSchema } from "@/lib/validations";
 
-// GET /api/sites/[siteKey]/toplists - List all toplists for a site
+// GET /api/sites/[siteKey]/toplists - List all toplists for a site (protected)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ siteKey: string }> }
@@ -49,7 +49,7 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
+    if (!session && !isValidApiKey(request)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

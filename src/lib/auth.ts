@@ -3,6 +3,15 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 
+/**
+ * Validates an API key from the X-API-Key header for service-to-service authentication.
+ * This allows external services (like the content tool) to call the API without a session.
+ */
+export function isValidApiKey(request: Request): boolean {
+  const apiKey = request.headers.get("X-API-Key");
+  return !!apiKey && apiKey === process.env.SERVICE_API_KEY;
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
