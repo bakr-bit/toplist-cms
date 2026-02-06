@@ -3,36 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
-import { ImageUpload } from "@/components/ui/image-upload";
 import { ToplistTableBuilder } from "@/components/dashboard/ToplistTableBuilder";
 
 interface ToplistItem {
@@ -80,196 +52,6 @@ interface Toplist {
 
 const DEFAULT_COLUMNS = ["name", "bonus", "rating"];
 
-function SortableItem({
-  item,
-  position,
-  onUpdate,
-  onRemove,
-}: {
-  item: ToplistItem;
-  position: number;
-  onUpdate: (id: string, field: string, value: string | number | string[] | null) => void;
-  onRemove: (id: string) => void;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: item.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="rounded-lg border bg-white p-4 mb-2"
-    >
-      <div className="flex items-center gap-4">
-        <button
-          {...attributes}
-          {...listeners}
-          className="cursor-grab text-zinc-400 hover:text-zinc-600"
-        >
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-          </svg>
-        </button>
-
-        <span className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 text-sm font-semibold text-zinc-600">
-          {position}
-        </span>
-
-        {item.logoOverride || item.brandLogo ? (
-          <img
-            src={item.logoOverride || item.brandLogo || ""}
-            alt={item.brandName}
-            className="h-10 w-20 object-contain"
-          />
-        ) : (
-          <div className="h-10 w-20 rounded bg-zinc-200" />
-        )}
-
-        <div className="flex-1">
-          <p className="font-medium">{item.brandName}</p>
-          <p className="text-sm text-zinc-500">{item.brandId}</p>
-        </div>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setExpanded(!expanded)}
-        >
-          {expanded ? "Collapse" : "Edit"}
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onRemove(item.id)}
-          className="text-red-500 hover:text-red-700"
-        >
-          Remove
-        </Button>
-      </div>
-
-      {expanded && (
-        <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3 pl-9">
-          <div>
-            <Label className="text-xs">Bonus Override</Label>
-            <Input
-              value={item.bonus || ""}
-              onChange={(e) => onUpdate(item.id, "bonus", e.target.value || null)}
-              placeholder="e.g. 100% up to $500"
-            />
-          </div>
-          <div>
-            <Label className="text-xs">Affiliate URL Override</Label>
-            <Input
-              value={item.affiliateUrl || ""}
-              onChange={(e) => onUpdate(item.id, "affiliateUrl", e.target.value || null)}
-              placeholder="https://..."
-            />
-          </div>
-          <div>
-            <Label className="text-xs">Review URL</Label>
-            <Input
-              value={item.reviewUrl || ""}
-              onChange={(e) => onUpdate(item.id, "reviewUrl", e.target.value || null)}
-              placeholder="/reviews/..."
-            />
-          </div>
-          <div>
-            <Label className="text-xs">Rating (0-10)</Label>
-            <Input
-              type="number"
-              min="0"
-              max="10"
-              step="0.1"
-              value={item.rating ?? ""}
-              onChange={(e) =>
-                onUpdate(item.id, "rating", e.target.value ? parseFloat(e.target.value) : null)
-              }
-            />
-          </div>
-          <div>
-            <Label className="text-xs">CTA Text</Label>
-            <Input
-              value={item.cta || ""}
-              onChange={(e) => onUpdate(item.id, "cta", e.target.value || null)}
-              placeholder="e.g. Play Now"
-            />
-          </div>
-          <div className="lg:col-span-2">
-            <Label className="text-xs">Logo Override</Label>
-            <ImageUpload
-              value={item.logoOverride || ""}
-              onChange={(url) => onUpdate(item.id, "logoOverride", url || null)}
-              type="toplist-item"
-              identifier={`${item.brandId}-${item.id}`}
-            />
-          </div>
-          <div>
-            <Label className="text-xs">Terms Override</Label>
-            <Input
-              value={item.termsOverride || ""}
-              onChange={(e) => onUpdate(item.id, "termsOverride", e.target.value || null)}
-              placeholder="e.g. 18+ T&Cs apply"
-            />
-          </div>
-          <div>
-            <Label className="text-xs">License Override</Label>
-            <Input
-              value={item.licenseOverride || ""}
-              onChange={(e) => onUpdate(item.id, "licenseOverride", e.target.value || null)}
-              placeholder="e.g. MGA, Curacao"
-            />
-          </div>
-          <div className="lg:col-span-3 md:col-span-2">
-            <Label className="text-xs">Pros Override (one per line)</Label>
-            <Textarea
-              value={item.prosOverride?.join("\n") || ""}
-              onChange={(e) => {
-                const lines = e.target.value
-                  .split("\n")
-                  .map((l) => l.trim())
-                  .filter((l) => l.length > 0);
-                onUpdate(item.id, "prosOverride", lines.length > 0 ? lines : null);
-              }}
-              placeholder="One pro per line"
-              rows={2}
-            />
-          </div>
-          <div className="lg:col-span-3 md:col-span-2">
-            <Label className="text-xs">Cons Override (one per line)</Label>
-            <Textarea
-              value={item.consOverride?.join("\n") || ""}
-              onChange={(e) => {
-                const lines = e.target.value
-                  .split("\n")
-                  .map((l) => l.trim())
-                  .filter((l) => l.length > 0);
-                onUpdate(item.id, "consOverride", lines.length > 0 ? lines : null);
-              }}
-              placeholder="One con per line"
-              rows={2}
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function ToplistEditorPage() {
   const params = useParams();
   const siteKey = params.siteKey as string;
@@ -282,15 +64,6 @@ export default function ToplistEditorPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-  const [selectedBrand, setSelectedBrand] = useState<string>("");
-  const [showTableBuilder, setShowTableBuilder] = useState(false);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   async function loadData() {
     try {
@@ -340,37 +113,13 @@ export default function ToplistEditorPage() {
     loadData();
   }, [siteKey, slug]);
 
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      setItems((items) => {
-        const oldIndex = items.findIndex((i) => i.id === active.id);
-        const newIndex = items.findIndex((i) => i.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-      setHasChanges(true);
-    }
-  }
-
-  function handleUpdateItem(id: string, field: string, value: string | number | string[] | null) {
-    setItems((items) =>
-      items.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item
-      )
-    );
-    setHasChanges(true);
-  }
-
   function handleRemoveItem(id: string) {
     setItems((items) => items.filter((item) => item.id !== id));
     setHasChanges(true);
   }
 
-  function handleAddBrand(brandId?: string) {
-    const targetBrandId = brandId || selectedBrand;
-    if (!targetBrandId) return;
-
-    const brand = brands.find((b) => b.brandId === targetBrandId);
+  function handleAddBrand(brandId: string) {
+    const brand = brands.find((b) => b.brandId === brandId);
     if (!brand) return;
 
     if (items.some((i) => i.brandId === brand.brandId)) {
@@ -396,7 +145,6 @@ export default function ToplistEditorPage() {
     };
 
     setItems([...items, newItem]);
-    if (!brandId) setSelectedBrand("");
     setHasChanges(true);
   }
 
@@ -465,11 +213,6 @@ export default function ToplistEditorPage() {
     return <div className="text-zinc-500">Toplist not found</div>;
   }
 
-  // Filter out brands already in the list
-  const availableBrands = brands.filter(
-    (b) => !items.some((i) => i.brandId === b.brandId)
-  );
-
   return (
     <div>
       <div className="mb-6">
@@ -489,73 +232,21 @@ export default function ToplistEditorPage() {
           <p className="text-zinc-500">/{toplist.slug}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant={showTableBuilder ? "default" : "outline"}
-            onClick={() => setShowTableBuilder(!showTableBuilder)}
-          >
-            {showTableBuilder ? "Hide Table Builder" : "Table Builder"}
-          </Button>
           <Button onClick={handleSave} disabled={!hasChanges || saving}>
             {saving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </div>
 
-      {showTableBuilder ? (
-        <ToplistTableBuilder
-          items={items}
-          brands={brands}
-          columns={columns}
-          onColumnsChange={handleColumnsChange}
-          onAddBrand={(brandId) => handleAddBrand(brandId)}
-          onRemoveBrand={handleRemoveItem}
-          onReorderItems={handleReorderItems}
-        />
-      ) : (
-        <>
-          <div className="flex gap-2 mb-6">
-            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-              <SelectTrigger className="w-64">
-                <SelectValue placeholder="Select a brand to add..." />
-              </SelectTrigger>
-              <SelectContent>
-                {availableBrands.map((brand) => (
-                  <SelectItem key={brand.brandId} value={brand.brandId}>
-                    {brand.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={() => handleAddBrand()} disabled={!selectedBrand}>
-              Add Brand
-            </Button>
-          </div>
-
-          {items.length === 0 ? (
-            <div className="text-zinc-500">
-              No items yet. Add brands from the dropdown above.
-            </div>
-          ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext items={items} strategy={verticalListSortingStrategy}>
-                {items.map((item, index) => (
-                  <SortableItem
-                    key={item.id}
-                    item={item}
-                    position={index + 1}
-                    onUpdate={handleUpdateItem}
-                    onRemove={handleRemoveItem}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
-          )}
-        </>
-      )}
+      <ToplistTableBuilder
+        items={items}
+        brands={brands}
+        columns={columns}
+        onColumnsChange={handleColumnsChange}
+        onAddBrand={(brandId) => handleAddBrand(brandId)}
+        onRemoveBrand={handleRemoveItem}
+        onReorderItems={handleReorderItems}
+      />
 
       {hasChanges && (
         <div className="fixed bottom-6 right-6">

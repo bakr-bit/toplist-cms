@@ -245,13 +245,16 @@ const DraggablePaletteItem = memo(function DraggablePaletteItem({
     data: { type },
   });
 
+  const bgColor = type === "brand" ? "bg-blue-50 hover:bg-blue-100 border-blue-200" : "bg-emerald-50 hover:bg-emerald-100 border-emerald-200";
+  const textColor = type === "brand" ? "text-blue-900" : "text-emerald-900";
+
   return (
     <div
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className={`px-2 py-1.5 rounded border text-xs cursor-grab bg-white hover:bg-zinc-50 select-none ${
-        isDragging ? "opacity-50" : ""
+      className={`px-3 py-2 rounded-lg border-2 text-xs font-medium cursor-grab select-none transition-all ${bgColor} ${textColor} ${
+        isDragging ? "opacity-50 scale-95" : "hover:shadow-md"
       }`}
     >
       {children}
@@ -287,24 +290,24 @@ const SortableColumnHeader = memo(function SortableColumnHeader({
   };
 
   return (
-    <TableHead ref={setNodeRef} style={style} className="relative group">
-      <div className="flex items-center gap-1">
+    <TableHead ref={setNodeRef} style={style} className="relative group bg-gradient-to-b from-zinc-50 to-zinc-100">
+      <div className="flex items-center gap-2">
         <span
           {...attributes}
           {...listeners}
-          className="cursor-grab text-zinc-400 hover:text-zinc-600"
+          className="cursor-grab text-zinc-400 hover:text-zinc-700 transition-colors"
         >
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
           </svg>
         </span>
-        <span className="text-xs font-medium">{label}</span>
+        <span className="text-xs font-bold text-zinc-700 uppercase tracking-wide">{label}</span>
         <button
           onClick={onRemove}
-          className="ml-1 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="ml-auto text-zinc-300 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
         >
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
@@ -344,20 +347,22 @@ const SortableRow = memo(function SortableRow({
   };
 
   return (
-    <TableRow ref={setNodeRef} style={style}>
+    <TableRow ref={setNodeRef} style={style} className="group hover:bg-blue-50/50 transition-colors">
       {/* Drag handle + position */}
-      <TableCell className="w-16">
-        <div className="flex items-center gap-1.5">
+      <TableCell className="w-16 border-r border-zinc-100">
+        <div className="flex items-center gap-2">
           <span
             {...attributes}
             {...listeners}
-            className="cursor-grab text-zinc-400 hover:text-zinc-600"
+            className="cursor-grab text-zinc-300 hover:text-zinc-600 transition-colors"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
             </svg>
           </span>
-          <span className="text-xs font-semibold text-zinc-500">{position}</span>
+          <span className="min-w-[1.5rem] h-6 flex items-center justify-center rounded-md bg-gradient-to-br from-amber-400 to-orange-500 text-white text-xs font-bold shadow-sm">
+            {position}
+          </span>
         </div>
       </TableCell>
 
@@ -366,18 +371,18 @@ const SortableRow = memo(function SortableRow({
         const colDef = COLUMN_REGISTRY[colKey];
         if (!colDef) return <TableCell key={colKey}>—</TableCell>;
         return (
-          <TableCell key={colKey}>{colDef.render(item, brand)}</TableCell>
+          <TableCell key={colKey} className="border-r border-zinc-100/50">{colDef.render(item, brand)}</TableCell>
         );
       })}
 
       {/* Remove button */}
-      <TableCell className="w-10">
+      <TableCell className="w-12">
         <button
           onClick={onRemove}
-          className="text-zinc-300 hover:text-red-500"
+          className="text-zinc-300 hover:text-red-600 opacity-50 group-hover:opacity-100 transition-all hover:scale-110"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </TableCell>
@@ -394,7 +399,7 @@ const DroppableTableBody = memo(function DroppableTableBody({ children }: { chil
   return (
     <TableBody
       ref={setNodeRef}
-      className={isOver ? "bg-blue-50/50" : ""}
+      className={isOver ? "bg-blue-100/30 transition-colors" : "transition-colors"}
     >
       {children}
     </TableBody>
@@ -410,7 +415,7 @@ const DroppableTableHeader = memo(function DroppableTableHeader({ children }: { 
   return (
     <TableHeader
       ref={setNodeRef}
-      className={isOver ? "bg-blue-50/50" : ""}
+      className={isOver ? "bg-emerald-100/40 transition-colors border-b-2 border-emerald-300" : "transition-colors border-b-2 border-zinc-200"}
     >
       {children}
     </TableHeader>
@@ -545,17 +550,22 @@ export function ToplistTableBuilder({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4">
+      <div className="flex gap-6">
         {/* ─── Sidebar Palettes ─── */}
-        <div className="w-48 shrink-0 space-y-4">
+        <div className="w-56 shrink-0 space-y-6">
           {/* Brand palette */}
-          <div>
-            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">
-              Brands
-            </h3>
-            <div className="space-y-1 max-h-64 overflow-y-auto">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider">
+                Brands
+              </h3>
+            </div>
+            <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-blue-100">
               {availableBrands.length === 0 ? (
-                <p className="text-xs text-zinc-400">All brands added</p>
+                <p className="text-xs text-blue-600/60 italic py-2">All brands added</p>
               ) : (
                 availableBrands.map((brand) => (
                   <DraggablePaletteItem
@@ -571,13 +581,18 @@ export function ToplistTableBuilder({
           </div>
 
           {/* Column palette */}
-          <div>
-            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">
-              Columns
-            </h3>
-            <div className="space-y-1 max-h-64 overflow-y-auto">
+          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+              </svg>
+              <h3 className="text-xs font-bold text-emerald-900 uppercase tracking-wider">
+                Columns
+              </h3>
+            </div>
+            <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-emerald-300 scrollbar-track-emerald-100">
               {unusedColumns.length === 0 ? (
-                <p className="text-xs text-zinc-400">All columns added</p>
+                <p className="text-xs text-emerald-600/60 italic py-2">All columns added</p>
               ) : (
                 unusedColumns.map((key) => (
                   <DraggablePaletteItem
@@ -594,7 +609,7 @@ export function ToplistTableBuilder({
         </div>
 
         {/* ─── Table ─── */}
-        <div className="flex-1 min-w-0 rounded-lg border bg-white overflow-x-auto">
+        <div className="flex-1 min-w-0 rounded-xl border-2 border-zinc-200 bg-white overflow-hidden shadow-lg">
           <Table>
             <DroppableTableHeader>
               <SortableContext
@@ -602,7 +617,9 @@ export function ToplistTableBuilder({
                 strategy={horizontalListSortingStrategy}
               >
                 <TableRow>
-                  <TableHead className="w-16 text-xs">#</TableHead>
+                  <TableHead className="w-16 text-xs bg-gradient-to-b from-zinc-50 to-zinc-100 border-r border-zinc-200">
+                    <span className="text-xs font-bold text-zinc-600 uppercase">#</span>
+                  </TableHead>
                   {columns.map((colKey) => (
                     <SortableColumnHeader
                       key={colKey}
@@ -611,7 +628,7 @@ export function ToplistTableBuilder({
                       onRemove={() => handleRemoveColumn(colKey)}
                     />
                   ))}
-                  <TableHead className="w-10" />
+                  <TableHead className="w-12 bg-gradient-to-b from-zinc-50 to-zinc-100" />
                 </TableRow>
               </SortableContext>
             </DroppableTableHeader>
@@ -625,9 +642,19 @@ export function ToplistTableBuilder({
                   <TableRow>
                     <TableCell
                       colSpan={columns.length + 2}
-                      className="text-center text-zinc-400 py-8"
+                      className="text-center py-16"
                     >
-                      Drag brands from the palette to add rows
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                          <svg className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-zinc-700">No brands yet</p>
+                          <p className="text-xs text-zinc-500 mt-1">Drag brands from the left sidebar to get started</p>
+                        </div>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (
