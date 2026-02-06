@@ -62,6 +62,7 @@ export async function GET(
       siteKey: toplist.siteKey,
       slug: toplist.slug,
       title: toplist.title,
+      columns: toplist.columns,
       updatedAt: toplist.updatedAt.toISOString(),
       items,
     });

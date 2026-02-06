@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { ToplistTableBuilder } from "@/components/dashboard/ToplistTableBuilder";
 
 interface ToplistItem {
   id: string;
@@ -55,15 +56,29 @@ interface Brand {
   brandId: string;
   name: string;
   defaultLogo: string | null;
+  defaultBonus: string | null;
+  defaultRating: number | null;
+  terms: string | null;
+  license: string | null;
+  pros: string[] | null;
+  cons: string[] | null;
+  features: string[] | null;
+  badgeText: string | null;
+  badgeColor: string | null;
+  gameProviders: string[] | null;
+  gameTypes: string[] | null;
 }
 
 interface Toplist {
   siteKey: string;
   slug: string;
   title: string | null;
+  columns: string[] | null;
   updatedAt: string;
   items: ToplistItem[];
 }
+
+const DEFAULT_COLUMNS = ["name", "bonus", "rating"];
 
 function SortableItem({
   item,
@@ -263,10 +278,12 @@ export default function ToplistEditorPage() {
   const [toplist, setToplist] = useState<Toplist | null>(null);
   const [items, setItems] = useState<ToplistItem[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [columns, setColumns] = useState<string[]>(DEFAULT_COLUMNS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [showTableBuilder, setShowTableBuilder] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -285,6 +302,10 @@ export default function ToplistEditorPage() {
       if (toplistRes.ok) {
         const data = await toplistRes.json();
         setToplist(data);
+        // Load columns from API or use defaults
+        if (Array.isArray(data.columns) && data.columns.length > 0) {
+          setColumns(data.columns);
+        }
         // Transform items with raw override values
         const itemsWithBrands = data.items.map((item: any, index: number) => ({
           id: `item-${index}`,
@@ -345,13 +366,13 @@ export default function ToplistEditorPage() {
     setHasChanges(true);
   }
 
-  function handleAddBrand() {
-    if (!selectedBrand) return;
+  function handleAddBrand(brandId?: string) {
+    const targetBrandId = brandId || selectedBrand;
+    if (!targetBrandId) return;
 
-    const brand = brands.find((b) => b.brandId === selectedBrand);
+    const brand = brands.find((b) => b.brandId === targetBrandId);
     if (!brand) return;
 
-    // Check if already in list
     if (items.some((i) => i.brandId === brand.brandId)) {
       toast.error("Brand already in list");
       return;
@@ -375,39 +396,59 @@ export default function ToplistEditorPage() {
     };
 
     setItems([...items, newItem]);
-    setSelectedBrand("");
+    if (!brandId) setSelectedBrand("");
+    setHasChanges(true);
+  }
+
+  function handleColumnsChange(newColumns: string[]) {
+    setColumns(newColumns);
+    setHasChanges(true);
+  }
+
+  function handleReorderItems(newItems: ToplistItem[]) {
+    setItems(newItems);
     setHasChanges(true);
   }
 
   async function handleSave() {
     setSaving(true);
     try {
-      const res = await fetch(`/api/sites/${siteKey}/toplists/${slug}/items`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: items.map((item) => ({
-            brandId: item.brandId,
-            bonus: item.bonus,
-            affiliateUrl: item.affiliateUrl,
-            reviewUrl: item.reviewUrl,
-            rating: item.rating,
-            cta: item.cta,
-            logoOverride: item.logoOverride,
-            termsOverride: item.termsOverride,
-            licenseOverride: item.licenseOverride,
-            prosOverride: item.prosOverride,
-            consOverride: item.consOverride,
-          })),
+      // Save columns and items in parallel
+      const [columnsRes, itemsRes] = await Promise.all([
+        fetch(`/api/sites/${siteKey}/toplists/${slug}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ columns }),
         }),
-      });
+        fetch(`/api/sites/${siteKey}/toplists/${slug}/items`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: items.map((item) => ({
+              brandId: item.brandId,
+              bonus: item.bonus,
+              affiliateUrl: item.affiliateUrl,
+              reviewUrl: item.reviewUrl,
+              rating: item.rating,
+              cta: item.cta,
+              logoOverride: item.logoOverride,
+              termsOverride: item.termsOverride,
+              licenseOverride: item.licenseOverride,
+              prosOverride: item.prosOverride,
+              consOverride: item.consOverride,
+            })),
+          }),
+        }),
+      ]);
 
-      if (res.ok) {
+      if (columnsRes.ok && itemsRes.ok) {
         toast.success("Changes saved");
         setHasChanges(false);
       } else {
-        const data = await res.json();
-        toast.error(data.error || "Failed to save");
+        const errData = !columnsRes.ok
+          ? await columnsRes.json()
+          : await itemsRes.json();
+        toast.error(errData.error || "Failed to save");
       }
     } catch {
       toast.error("Failed to save");
@@ -447,51 +488,73 @@ export default function ToplistEditorPage() {
           </h1>
           <p className="text-zinc-500">/{toplist.slug}</p>
         </div>
-        <Button onClick={handleSave} disabled={!hasChanges || saving}>
-          {saving ? "Saving..." : "Save Changes"}
-        </Button>
-      </div>
-
-      <div className="flex gap-2 mb-6">
-        <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-          <SelectTrigger className="w-64">
-            <SelectValue placeholder="Select a brand to add..." />
-          </SelectTrigger>
-          <SelectContent>
-            {availableBrands.map((brand) => (
-              <SelectItem key={brand.brandId} value={brand.brandId}>
-                {brand.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button onClick={handleAddBrand} disabled={!selectedBrand}>
-          Add Brand
-        </Button>
-      </div>
-
-      {items.length === 0 ? (
-        <div className="text-zinc-500">
-          No items yet. Add brands from the dropdown above.
+        <div className="flex items-center gap-2">
+          <Button
+            variant={showTableBuilder ? "default" : "outline"}
+            onClick={() => setShowTableBuilder(!showTableBuilder)}
+          >
+            {showTableBuilder ? "Hide Table Builder" : "Table Builder"}
+          </Button>
+          <Button onClick={handleSave} disabled={!hasChanges || saving}>
+            {saving ? "Saving..." : "Save Changes"}
+          </Button>
         </div>
+      </div>
+
+      {showTableBuilder ? (
+        <ToplistTableBuilder
+          items={items}
+          brands={brands}
+          columns={columns}
+          onColumnsChange={handleColumnsChange}
+          onAddBrand={(brandId) => handleAddBrand(brandId)}
+          onRemoveBrand={handleRemoveItem}
+          onReorderItems={handleReorderItems}
+        />
       ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext items={items} strategy={verticalListSortingStrategy}>
-            {items.map((item, index) => (
-              <SortableItem
-                key={item.id}
-                item={item}
-                position={index + 1}
-                onUpdate={handleUpdateItem}
-                onRemove={handleRemoveItem}
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
+        <>
+          <div className="flex gap-2 mb-6">
+            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Select a brand to add..." />
+              </SelectTrigger>
+              <SelectContent>
+                {availableBrands.map((brand) => (
+                  <SelectItem key={brand.brandId} value={brand.brandId}>
+                    {brand.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={() => handleAddBrand()} disabled={!selectedBrand}>
+              Add Brand
+            </Button>
+          </div>
+
+          {items.length === 0 ? (
+            <div className="text-zinc-500">
+              No items yet. Add brands from the dropdown above.
+            </div>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={items} strategy={verticalListSortingStrategy}>
+                {items.map((item, index) => (
+                  <SortableItem
+                    key={item.id}
+                    item={item}
+                    position={index + 1}
+                    onUpdate={handleUpdateItem}
+                    onRemove={handleRemoveItem}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          )}
+        </>
       )}
 
       {hasChanges && (

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions, isValidApiKey } from "@/lib/auth";
@@ -107,6 +108,7 @@ export async function GET(
         siteKey: toplist.siteKey,
         slug: toplist.slug,
         title: toplist.title,
+        columns: toplist.columns,
         updatedAt: toplist.updatedAt.toISOString(),
         items,
       },
@@ -143,11 +145,17 @@ export async function PUT(
       );
     }
 
+    const { columns, ...rest } = validation.data;
+    const data: any = { ...rest };
+    if (columns !== undefined) {
+      data.columns = columns === null ? Prisma.JsonNull : columns;
+    }
+
     const toplist = await prisma.toplist.update({
       where: {
         siteKey_slug: { siteKey, slug },
       },
-      data: validation.data,
+      data,
     });
 
     return NextResponse.json(toplist);
