@@ -5,6 +5,27 @@ import { getServerSession } from "next-auth";
 import { authOptions, isValidApiKey } from "@/lib/auth";
 import { updateBrandSchema } from "@/lib/validations";
 
+// JSON fields that need Prisma.JsonNull handling
+const jsonFields = [
+  "pros", "cons", "languages", "availableCountries", "restrictedCountries",
+  "currencies", "paymentMethods", "gameProviders", "gameTypes",
+  "supportLanguages", "features",
+] as const;
+
+function transformJsonFields(data: Record<string, unknown>) {
+  const result = { ...data };
+  for (const field of jsonFields) {
+    if (field in result) {
+      if (result[field] === null) {
+        result[field] = Prisma.JsonNull;
+      } else if (result[field] === undefined) {
+        delete result[field];
+      }
+    }
+  }
+  return result;
+}
+
 // GET /api/brands/[brandId] - Get a specific brand (protected)
 export async function GET(
   request: NextRequest,
@@ -44,6 +65,36 @@ export async function GET(
       description: brand.description,
       pros: brand.pros,
       cons: brand.cons,
+      yearEstablished: brand.yearEstablished,
+      ownerOperator: brand.ownerOperator,
+      languages: brand.languages,
+      availableCountries: brand.availableCountries,
+      restrictedCountries: brand.restrictedCountries,
+      currencies: brand.currencies,
+      paymentMethods: brand.paymentMethods,
+      withdrawalTime: brand.withdrawalTime,
+      minDeposit: brand.minDeposit,
+      minWithdrawal: brand.minWithdrawal,
+      maxWithdrawal: brand.maxWithdrawal,
+      welcomePackage: brand.welcomePackage,
+      sportsBetting: brand.sportsBetting,
+      noDepositBonus: brand.noDepositBonus,
+      freeSpinsOffer: brand.freeSpinsOffer,
+      loyaltyProgram: brand.loyaltyProgram,
+      promotions: brand.promotions,
+      gameProviders: brand.gameProviders,
+      totalGames: brand.totalGames,
+      gameTypes: brand.gameTypes,
+      exclusiveGames: brand.exclusiveGames,
+      supportContacts: brand.supportContacts,
+      supportHours: brand.supportHours,
+      supportLanguages: brand.supportLanguages,
+      mobileCompatibility: brand.mobileCompatibility,
+      registrationProcess: brand.registrationProcess,
+      kycProcess: brand.kycProcess,
+      features: brand.features,
+      badgeText: brand.badgeText,
+      badgeColor: brand.badgeColor,
       usageCount: brand._count.toplistItems,
       createdAt: brand.createdAt.toISOString(),
       updatedAt: brand.updatedAt.toISOString(),
@@ -79,22 +130,11 @@ export async function PUT(
       );
     }
 
-    // Transform null JSON fields to Prisma.JsonNull
-    const data = {
-      ...validation.data,
-      pros:
-        validation.data.pros === null
-          ? Prisma.JsonNull
-          : validation.data.pros ?? undefined,
-      cons:
-        validation.data.cons === null
-          ? Prisma.JsonNull
-          : validation.data.cons ?? undefined,
-    };
+    const data = transformJsonFields(validation.data as Record<string, unknown>);
 
     const brand = await prisma.brand.update({
       where: { brandId },
-      data,
+      data: data as Prisma.BrandUpdateInput,
     });
 
     return NextResponse.json(brand);

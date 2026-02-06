@@ -1,5 +1,39 @@
 import { z } from "zod";
 
+// Shared brand extended fields (used by both create and update schemas)
+const brandExtendedFields = {
+  yearEstablished: z.number().int().min(1900).max(2100).optional().nullable(),
+  ownerOperator: z.string().max(200).optional().nullable(),
+  languages: z.array(z.string()).optional().nullable(),
+  availableCountries: z.array(z.string()).optional().nullable(),
+  restrictedCountries: z.array(z.string()).optional().nullable(),
+  currencies: z.array(z.string()).optional().nullable(),
+  paymentMethods: z.array(z.string()).optional().nullable(),
+  withdrawalTime: z.string().max(200).optional().nullable(),
+  minDeposit: z.string().max(100).optional().nullable(),
+  minWithdrawal: z.string().max(100).optional().nullable(),
+  maxWithdrawal: z.string().max(200).optional().nullable(),
+  welcomePackage: z.string().max(500).optional().nullable(),
+  sportsBetting: z.boolean().optional().nullable(),
+  noDepositBonus: z.string().max(500).optional().nullable(),
+  freeSpinsOffer: z.string().max(500).optional().nullable(),
+  loyaltyProgram: z.string().max(500).optional().nullable(),
+  promotions: z.string().max(500).optional().nullable(),
+  gameProviders: z.array(z.string()).optional().nullable(),
+  totalGames: z.number().int().min(0).optional().nullable(),
+  gameTypes: z.array(z.string()).optional().nullable(),
+  exclusiveGames: z.string().max(500).optional().nullable(),
+  supportContacts: z.string().max(500).optional().nullable(),
+  supportHours: z.string().max(200).optional().nullable(),
+  supportLanguages: z.array(z.string()).optional().nullable(),
+  mobileCompatibility: z.string().max(200).optional().nullable(),
+  registrationProcess: z.string().max(500).optional().nullable(),
+  kycProcess: z.string().max(500).optional().nullable(),
+  features: z.array(z.string()).max(3).optional().nullable(),
+  badgeText: z.string().max(200).optional().nullable(),
+  badgeColor: z.string().max(50).optional().nullable(),
+};
+
 // Brand schemas
 export const createBrandSchema = z.object({
   brandId: z
@@ -18,6 +52,7 @@ export const createBrandSchema = z.object({
   description: z.string().optional().nullable(),
   pros: z.array(z.string()).optional().nullable(),
   cons: z.array(z.string()).optional().nullable(),
+  ...brandExtendedFields,
 });
 
 export const updateBrandSchema = z.object({
@@ -32,6 +67,7 @@ export const updateBrandSchema = z.object({
   description: z.string().optional().nullable(),
   pros: z.array(z.string()).optional().nullable(),
   cons: z.array(z.string()).optional().nullable(),
+  ...brandExtendedFields,
 });
 
 // SERP schema (keyword + geo pair)

@@ -19,6 +19,37 @@ model Brand {
   description         String?
   pros                Json?
   cons                Json?
+  // Extended fields
+  yearEstablished     Int?
+  ownerOperator       String?
+  languages           Json?
+  availableCountries  Json?
+  restrictedCountries Json?
+  currencies          Json?
+  paymentMethods      Json?
+  withdrawalTime      String?
+  minDeposit          String?
+  minWithdrawal       String?
+  maxWithdrawal       String?
+  welcomePackage      String?
+  sportsBetting       Boolean?
+  noDepositBonus      String?
+  freeSpinsOffer      String?
+  loyaltyProgram      String?
+  promotions          String?
+  gameProviders       Json?
+  totalGames          Int?
+  gameTypes           Json?
+  exclusiveGames      String?
+  supportContacts     String?
+  supportHours        String?
+  supportLanguages    Json?
+  mobileCompatibility String?
+  registrationProcess String?
+  kycProcess          String?
+  features            Json?
+  badgeText           String?
+  badgeColor          String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 

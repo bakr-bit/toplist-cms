@@ -17,7 +17,38 @@ const importBrandSchema = z.object({
   pros: z.array(z.string()).optional(),
   cons: z.array(z.string()).optional(),
   description: z.string().optional(),
-  logo: z.string().optional(), // Can be full URL or relative path
+  logo: z.string().optional(),
+  // Extended fields
+  yearEstablished: z.number().int().optional(),
+  ownerOperator: z.string().optional(),
+  languages: z.array(z.string()).optional(),
+  availableCountries: z.array(z.string()).optional(),
+  restrictedCountries: z.array(z.string()).optional(),
+  currencies: z.array(z.string()).optional(),
+  paymentMethods: z.array(z.string()).optional(),
+  withdrawalTime: z.string().optional(),
+  minDeposit: z.string().optional(),
+  minWithdrawal: z.string().optional(),
+  maxWithdrawal: z.string().optional(),
+  welcomePackage: z.string().optional(),
+  sportsBetting: z.boolean().optional(),
+  noDepositBonus: z.string().optional(),
+  freeSpinsOffer: z.string().optional(),
+  loyaltyProgram: z.string().optional(),
+  promotions: z.string().optional(),
+  gameProviders: z.array(z.string()).optional(),
+  totalGames: z.number().int().optional(),
+  gameTypes: z.array(z.string()).optional(),
+  exclusiveGames: z.string().optional(),
+  supportContacts: z.string().optional(),
+  supportHours: z.string().optional(),
+  supportLanguages: z.array(z.string()).optional(),
+  mobileCompatibility: z.string().optional(),
+  registrationProcess: z.string().optional(),
+  kycProcess: z.string().optional(),
+  features: z.array(z.string()).max(3).optional(),
+  badgeText: z.string().optional(),
+  badgeColor: z.string().optional(),
 });
 
 // Fetch image from URL and upload to R2
@@ -159,6 +190,9 @@ export async function POST(request: NextRequest) {
           logoUrl = await fetchAndUploadLogo(sourceLogoUrl, brandId);
         }
 
+        const jsonOrNull = (val: string[] | undefined): string[] | typeof Prisma.JsonNull =>
+          val && val.length > 0 ? val : Prisma.JsonNull;
+
         await prisma.brand.create({
           data: {
             brandId,
@@ -169,8 +203,38 @@ export async function POST(request: NextRequest) {
             defaultRating: data.rating ?? null,
             license: data.license || null,
             description: data.description || null,
-            pros: data.pros ? data.pros : Prisma.JsonNull,
-            cons: data.cons ? data.cons : Prisma.JsonNull,
+            pros: jsonOrNull(data.pros),
+            cons: jsonOrNull(data.cons),
+            yearEstablished: data.yearEstablished ?? null,
+            ownerOperator: data.ownerOperator || null,
+            languages: jsonOrNull(data.languages),
+            availableCountries: jsonOrNull(data.availableCountries),
+            restrictedCountries: jsonOrNull(data.restrictedCountries),
+            currencies: jsonOrNull(data.currencies),
+            paymentMethods: jsonOrNull(data.paymentMethods),
+            withdrawalTime: data.withdrawalTime || null,
+            minDeposit: data.minDeposit || null,
+            minWithdrawal: data.minWithdrawal || null,
+            maxWithdrawal: data.maxWithdrawal || null,
+            welcomePackage: data.welcomePackage || null,
+            sportsBetting: data.sportsBetting ?? null,
+            noDepositBonus: data.noDepositBonus || null,
+            freeSpinsOffer: data.freeSpinsOffer || null,
+            loyaltyProgram: data.loyaltyProgram || null,
+            promotions: data.promotions || null,
+            gameProviders: jsonOrNull(data.gameProviders),
+            totalGames: data.totalGames ?? null,
+            gameTypes: jsonOrNull(data.gameTypes),
+            exclusiveGames: data.exclusiveGames || null,
+            supportContacts: data.supportContacts || null,
+            supportHours: data.supportHours || null,
+            supportLanguages: jsonOrNull(data.supportLanguages),
+            mobileCompatibility: data.mobileCompatibility || null,
+            registrationProcess: data.registrationProcess || null,
+            kycProcess: data.kycProcess || null,
+            features: jsonOrNull(data.features),
+            badgeText: data.badgeText || null,
+            badgeColor: data.badgeColor || null,
           },
         });
         results.imported++;

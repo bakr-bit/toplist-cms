@@ -27,6 +27,36 @@ interface Brand {
   description: string | null;
   pros: string[] | null;
   cons: string[] | null;
+  yearEstablished: number | null;
+  ownerOperator: string | null;
+  languages: string[] | null;
+  availableCountries: string[] | null;
+  restrictedCountries: string[] | null;
+  currencies: string[] | null;
+  paymentMethods: string[] | null;
+  withdrawalTime: string | null;
+  minDeposit: string | null;
+  minWithdrawal: string | null;
+  maxWithdrawal: string | null;
+  welcomePackage: string | null;
+  sportsBetting: boolean | null;
+  noDepositBonus: string | null;
+  freeSpinsOffer: string | null;
+  loyaltyProgram: string | null;
+  promotions: string | null;
+  gameProviders: string[] | null;
+  totalGames: number | null;
+  gameTypes: string[] | null;
+  exclusiveGames: string | null;
+  supportContacts: string | null;
+  supportHours: string | null;
+  supportLanguages: string[] | null;
+  mobileCompatibility: string | null;
+  registrationProcess: string | null;
+  kycProcess: string | null;
+  features: string[] | null;
+  badgeText: string | null;
+  badgeColor: string | null;
   usageCount: number;
 }
 

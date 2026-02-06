@@ -5,6 +5,77 @@ import { getServerSession } from "next-auth";
 import { authOptions, isValidApiKey } from "@/lib/auth";
 import { createBrandSchema } from "@/lib/validations";
 
+// JSON fields that need Prisma.JsonNull handling
+const jsonFields = [
+  "pros", "cons", "languages", "availableCountries", "restrictedCountries",
+  "currencies", "paymentMethods", "gameProviders", "gameTypes",
+  "supportLanguages", "features",
+] as const;
+
+function transformJsonFields(data: Record<string, unknown>) {
+  const result = { ...data };
+  for (const field of jsonFields) {
+    if (field in result) {
+      if (result[field] === null) {
+        result[field] = Prisma.JsonNull;
+      } else if (result[field] === undefined) {
+        delete result[field];
+      }
+    }
+  }
+  return result;
+}
+
+function mapBrandResponse(b: Record<string, unknown> & { _count?: { toplistItems: number }; defaultRating?: unknown; createdAt?: Date; updatedAt?: Date }) {
+  return {
+    brandId: b.brandId,
+    name: b.name,
+    defaultLogo: b.defaultLogo,
+    website: b.website,
+    defaultBonus: b.defaultBonus,
+    defaultAffiliateUrl: b.defaultAffiliateUrl,
+    defaultRating: b.defaultRating ? Number(b.defaultRating) : null,
+    terms: b.terms,
+    license: b.license,
+    description: b.description,
+    pros: b.pros,
+    cons: b.cons,
+    yearEstablished: b.yearEstablished,
+    ownerOperator: b.ownerOperator,
+    languages: b.languages,
+    availableCountries: b.availableCountries,
+    restrictedCountries: b.restrictedCountries,
+    currencies: b.currencies,
+    paymentMethods: b.paymentMethods,
+    withdrawalTime: b.withdrawalTime,
+    minDeposit: b.minDeposit,
+    minWithdrawal: b.minWithdrawal,
+    maxWithdrawal: b.maxWithdrawal,
+    welcomePackage: b.welcomePackage,
+    sportsBetting: b.sportsBetting,
+    noDepositBonus: b.noDepositBonus,
+    freeSpinsOffer: b.freeSpinsOffer,
+    loyaltyProgram: b.loyaltyProgram,
+    promotions: b.promotions,
+    gameProviders: b.gameProviders,
+    totalGames: b.totalGames,
+    gameTypes: b.gameTypes,
+    exclusiveGames: b.exclusiveGames,
+    supportContacts: b.supportContacts,
+    supportHours: b.supportHours,
+    supportLanguages: b.supportLanguages,
+    mobileCompatibility: b.mobileCompatibility,
+    registrationProcess: b.registrationProcess,
+    kycProcess: b.kycProcess,
+    features: b.features,
+    badgeText: b.badgeText,
+    badgeColor: b.badgeColor,
+    usageCount: b._count?.toplistItems,
+    createdAt: b.createdAt?.toISOString(),
+    updatedAt: b.updatedAt?.toISOString(),
+  };
+}
+
 // GET /api/brands - List all brands (protected)
 export async function GET(request: NextRequest) {
   try {
@@ -22,25 +93,7 @@ export async function GET(request: NextRequest) {
       orderBy: { name: "asc" },
     });
 
-    return NextResponse.json(
-      brands.map((b) => ({
-        brandId: b.brandId,
-        name: b.name,
-        defaultLogo: b.defaultLogo,
-        website: b.website,
-        defaultBonus: b.defaultBonus,
-        defaultAffiliateUrl: b.defaultAffiliateUrl,
-        defaultRating: b.defaultRating ? Number(b.defaultRating) : null,
-        terms: b.terms,
-        license: b.license,
-        description: b.description,
-        pros: b.pros,
-        cons: b.cons,
-        usageCount: b._count.toplistItems,
-        createdAt: b.createdAt.toISOString(),
-        updatedAt: b.updatedAt.toISOString(),
-      }))
-    );
+    return NextResponse.json(brands.map((b) => mapBrandResponse(b as never)));
   } catch (error) {
     console.error("Error fetching brands:", error);
     return NextResponse.json(
@@ -80,21 +133,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Transform null JSON fields to Prisma.JsonNull
-    const data = {
-      ...validation.data,
-      pros:
-        validation.data.pros === null
-          ? Prisma.JsonNull
-          : validation.data.pros ?? undefined,
-      cons:
-        validation.data.cons === null
-          ? Prisma.JsonNull
-          : validation.data.cons ?? undefined,
-    };
+    const data = transformJsonFields(validation.data as Record<string, unknown>);
 
     const brand = await prisma.brand.create({
-      data,
+      data: data as Prisma.BrandCreateInput,
     });
 
     return NextResponse.json(brand, { status: 201 });

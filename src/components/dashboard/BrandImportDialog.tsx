@@ -28,7 +28,11 @@ const EXAMPLE_JSON = `{
       "bonus": "100% up to $500",
       "description": "Optional description",
       "pros": ["Pro 1", "Pro 2"],
-      "cons": ["Con 1"]
+      "cons": ["Con 1"],
+      "yearEstablished": 2020,
+      "paymentMethods": ["Visa", "Skrill"],
+      "gameProviders": ["NetEnt", "Microgaming"],
+      "features": ["Fast Payouts", "VIP"]
     }
   }
 }`;
@@ -105,6 +109,9 @@ export function BrandImportDialog({
               <li><code className="text-xs bg-zinc-100 px-1 rounded">logo</code> - Optional. URL or relative path (auto-detected if baseUrl provided)</li>
               <li><code className="text-xs bg-zinc-100 px-1 rounded">affiliateUrl</code>, <code className="text-xs bg-zinc-100 px-1 rounded">rating</code>, <code className="text-xs bg-zinc-100 px-1 rounded">license</code>, <code className="text-xs bg-zinc-100 px-1 rounded">bonus</code> - Optional defaults</li>
               <li><code className="text-xs bg-zinc-100 px-1 rounded">pros</code>, <code className="text-xs bg-zinc-100 px-1 rounded">cons</code> - Optional arrays of strings</li>
+              <li><code className="text-xs bg-zinc-100 px-1 rounded">yearEstablished</code>, <code className="text-xs bg-zinc-100 px-1 rounded">ownerOperator</code>, <code className="text-xs bg-zinc-100 px-1 rounded">minDeposit</code>, <code className="text-xs bg-zinc-100 px-1 rounded">withdrawalTime</code> - Optional brand details</li>
+              <li><code className="text-xs bg-zinc-100 px-1 rounded">paymentMethods</code>, <code className="text-xs bg-zinc-100 px-1 rounded">gameProviders</code>, <code className="text-xs bg-zinc-100 px-1 rounded">gameTypes</code>, <code className="text-xs bg-zinc-100 px-1 rounded">currencies</code> - Optional arrays</li>
+              <li><code className="text-xs bg-zinc-100 px-1 rounded">features</code> - Optional array (max 3), <code className="text-xs bg-zinc-100 px-1 rounded">badgeText</code>, <code className="text-xs bg-zinc-100 px-1 rounded">badgeColor</code> - Display options</li>
             </ul>
           </div>
 
