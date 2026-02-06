@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, ReactNode } from "react";
+import { useState, useMemo, useCallback, memo, ReactNode } from "react";
 import {
   DndContext,
   closestCenter,
@@ -231,7 +231,7 @@ const ALL_COLUMN_KEYS = Object.keys(COLUMN_REGISTRY);
 
 // ─── DnD Sub-Components ──────────────────────────────────────────────
 
-function DraggablePaletteItem({
+const DraggablePaletteItem = memo(function DraggablePaletteItem({
   id,
   type,
   children,
@@ -257,9 +257,9 @@ function DraggablePaletteItem({
       {children}
     </div>
   );
-}
+});
 
-function SortableColumnHeader({
+const SortableColumnHeader = memo(function SortableColumnHeader({
   colKey,
   label,
   onRemove,
@@ -310,9 +310,9 @@ function SortableColumnHeader({
       </div>
     </TableHead>
   );
-}
+});
 
-function SortableRow({
+const SortableRow = memo(function SortableRow({
   item,
   brand,
   columns,
@@ -383,9 +383,9 @@ function SortableRow({
       </TableCell>
     </TableRow>
   );
-}
+});
 
-function DroppableTableBody({ children }: { children: ReactNode }) {
+const DroppableTableBody = memo(function DroppableTableBody({ children }: { children: ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({
     id: "table-body-drop",
     data: { accepts: "brand" },
@@ -399,9 +399,9 @@ function DroppableTableBody({ children }: { children: ReactNode }) {
       {children}
     </TableBody>
   );
-}
+});
 
-function DroppableTableHeader({ children }: { children: ReactNode }) {
+const DroppableTableHeader = memo(function DroppableTableHeader({ children }: { children: ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({
     id: "table-header-drop",
     data: { accepts: "column" },
@@ -415,7 +415,7 @@ function DroppableTableHeader({ children }: { children: ReactNode }) {
       {children}
     </TableHeader>
   );
-}
+});
 
 // ─── Main Component ──────────────────────────────────────────────────
 
@@ -437,17 +437,32 @@ export function ToplistTableBuilder({
     })
   );
 
-  const brandsInList = new Set(items.map((i) => i.brandId));
-  const availableBrands = brands.filter((b) => !brandsInList.has(b.brandId));
-  const unusedColumns = ALL_COLUMN_KEYS.filter((k) => !columns.includes(k));
+  // Memoize expensive computations
+  const brandsInList = useMemo(
+    () => new Set(items.map((i) => i.brandId)),
+    [items]
+  );
 
-  const brandMap = new Map(brands.map((b) => [b.brandId, b]));
+  const availableBrands = useMemo(
+    () => brands.filter((b) => !brandsInList.has(b.brandId)),
+    [brands, brandsInList]
+  );
 
-  function handleDragStart(event: DragStartEvent) {
+  const unusedColumns = useMemo(
+    () => ALL_COLUMN_KEYS.filter((k) => !columns.includes(k)),
+    [columns]
+  );
+
+  const brandMap = useMemo(
+    () => new Map(brands.map((b) => [b.brandId, b])),
+    [brands]
+  );
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveId(event.active.id as string);
-  }
+  }, []);
 
-  function handleDragEnd(event: DragEndEvent) {
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     setActiveId(null);
     const { active, over } = event;
     if (!over) return;
@@ -491,16 +506,13 @@ export function ToplistTableBuilder({
       }
       return;
     }
-  }
+  }, [items, columns, onAddBrand, onColumnsChange, onReorderItems]);
 
-  function handleRemoveColumn(colKey: string) {
+  const handleRemoveColumn = useCallback((colKey: string) => {
     onColumnsChange(columns.filter((c) => c !== colKey));
-  }
+  }, [columns, onColumnsChange]);
 
-  // Overlay content for drag feedback
-  const activeData = activeId ? getActiveLabel(activeId) : null;
-
-  function getActiveLabel(id: string): string {
+  const getActiveLabel = useCallback((id: string): string => {
     if (id.startsWith("palette-brand-")) {
       const brandId = id.replace("palette-brand-", "");
       return brandMap.get(brandId)?.name || brandId;
@@ -519,7 +531,12 @@ export function ToplistTableBuilder({
       return COLUMN_REGISTRY[key]?.label || key;
     }
     return id;
-  }
+  }, [brandMap, items]);
+
+  const activeData = useMemo(
+    () => (activeId ? getActiveLabel(activeId) : null),
+    [activeId, getActiveLabel]
+  );
 
   return (
     <DndContext
