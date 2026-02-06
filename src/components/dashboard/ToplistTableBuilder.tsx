@@ -745,7 +745,8 @@ export function ToplistTableBuilder({
   onUpdateItem,
 }: ToplistTableBuilderProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [editingItem, setEditingItem] = useState<ToplistItem | null>(null);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const editingItem = editingItemId ? items.find((i) => i.id === editingItemId) ?? null : null;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -995,7 +996,7 @@ export function ToplistTableBuilder({
                       columns={columns}
                       position={index + 1}
                       onRemove={() => onRemoveBrand(item.id)}
-                      onEdit={() => setEditingItem(item)}
+                      onEdit={() => setEditingItemId(item.id)}
                     />
                   ))
                 )}
@@ -1019,7 +1020,7 @@ export function ToplistTableBuilder({
         item={editingItem}
         brand={editingItem ? brandMap.get(editingItem.brandId) : undefined}
         open={!!editingItem}
-        onOpenChange={(open) => !open && setEditingItem(null)}
+        onOpenChange={(open) => !open && setEditingItemId(null)}
         onUpdate={(field, value) => {
           if (editingItem) {
             onUpdateItem(editingItem.id, field, value);
