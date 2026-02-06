@@ -31,6 +31,18 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -56,6 +68,7 @@ interface Brand {
   name: string;
   defaultLogo: string | null;
   defaultBonus: string | null;
+  defaultAffiliateUrl: string | null;
   defaultRating: number | null;
   terms: string | null;
   license: string | null;
@@ -72,10 +85,13 @@ interface ToplistTableBuilderProps {
   items: ToplistItem[];
   brands: Brand[];
   columns: string[];
+  columnLabels?: Record<string, string>; // Custom labels for columns
   onColumnsChange: (cols: string[]) => void;
+  onColumnLabelChange?: (colKey: string, label: string) => void;
   onAddBrand: (brandId: string) => void;
   onRemoveBrand: (itemId: string) => void;
   onReorderItems: (items: ToplistItem[]) => void;
+  onUpdateItem: (id: string, field: string, value: string | number | string[] | null) => void;
 }
 
 // ─── Column Registry ─────────────────────────────────────────────────
@@ -120,7 +136,27 @@ const COLUMN_REGISTRY: Record<string, ColumnDef> = {
   },
   cta: {
     label: "CTA",
-    render: (item) => <span>{item.cta || "—"}</span>,
+    render: (item, brand) => {
+      const url = item.affiliateUrl || brand?.defaultAffiliateUrl;
+      const text = item.cta || "Play Now";
+
+      return url ? (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold text-xs rounded-full shadow-md hover:shadow-lg transition-all transform hover:scale-105"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          {text}
+        </a>
+      ) : (
+        <span className="text-xs text-zinc-400 italic">{text}</span>
+      );
+    },
   },
   affiliateUrl: {
     label: "Affiliate URL",
@@ -266,11 +302,16 @@ const SortableColumnHeader = memo(function SortableColumnHeader({
   colKey,
   label,
   onRemove,
+  onRename,
 }: {
   colKey: string;
   label: string;
   onRemove: () => void;
+  onRename: (newLabel: string) => void;
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(label);
+
   const {
     attributes,
     listeners,
@@ -289,6 +330,13 @@ const SortableColumnHeader = memo(function SortableColumnHeader({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const handleSaveRename = () => {
+    if (editValue.trim() && editValue !== label) {
+      onRename(editValue.trim());
+    }
+    setIsEditing(false);
+  };
+
   return (
     <TableHead ref={setNodeRef} style={style} className="relative group bg-gradient-to-b from-zinc-50 to-zinc-100">
       <div className="flex items-center gap-2">
@@ -301,7 +349,31 @@ const SortableColumnHeader = memo(function SortableColumnHeader({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
           </svg>
         </span>
-        <span className="text-xs font-bold text-zinc-700 uppercase tracking-wide">{label}</span>
+        {isEditing ? (
+          <input
+            type="text"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={handleSaveRename}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSaveRename();
+              if (e.key === "Escape") {
+                setEditValue(label);
+                setIsEditing(false);
+              }
+            }}
+            className="text-xs font-bold text-zinc-700 uppercase tracking-wide bg-white border border-zinc-300 rounded px-1 py-0.5 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
+          />
+        ) : (
+          <span
+            className="text-xs font-bold text-zinc-700 uppercase tracking-wide cursor-pointer hover:text-blue-600"
+            onDoubleClick={() => setIsEditing(true)}
+            title="Double-click to rename"
+          >
+            {label}
+          </span>
+        )}
         <button
           onClick={onRemove}
           className="ml-auto text-zinc-300 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
@@ -321,12 +393,14 @@ const SortableRow = memo(function SortableRow({
   columns,
   position,
   onRemove,
+  onEdit,
 }: {
   item: ToplistItem;
   brand: Brand | undefined;
   columns: string[];
   position: number;
   onRemove: () => void;
+  onEdit: () => void;
 }) {
   const {
     attributes,
@@ -371,7 +445,13 @@ const SortableRow = memo(function SortableRow({
         const colDef = COLUMN_REGISTRY[colKey];
         if (!colDef) return <TableCell key={colKey}>—</TableCell>;
         return (
-          <TableCell key={colKey} className="border-r border-zinc-100/50">{colDef.render(item, brand)}</TableCell>
+          <TableCell
+            key={colKey}
+            className="border-r border-zinc-100/50 cursor-pointer"
+            onClick={onEdit}
+          >
+            {colDef.render(item, brand)}
+          </TableCell>
         );
       })}
 
@@ -424,16 +504,158 @@ const DroppableTableHeader = memo(function DroppableTableHeader({ children }: { 
 
 // ─── Main Component ──────────────────────────────────────────────────
 
+// ─── Edit Modal Component ────────────────────────────────────────────
+
+function ItemEditModal({
+  item,
+  brand,
+  open,
+  onOpenChange,
+  onUpdate,
+}: {
+  item: ToplistItem | null;
+  brand: Brand | undefined;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onUpdate: (field: string, value: string | number | string[] | null) => void;
+}) {
+  if (!item) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit {item.brandName}</DialogTitle>
+        </DialogHeader>
+
+        <div className="grid gap-4 md:grid-cols-2 py-4">
+          <div>
+            <Label className="text-xs">Bonus Override</Label>
+            <Input
+              value={item.bonus || ""}
+              onChange={(e) => onUpdate("bonus", e.target.value || null)}
+              placeholder={brand?.defaultBonus || "e.g. 100% up to $500"}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Affiliate URL Override</Label>
+            <Input
+              value={item.affiliateUrl || ""}
+              onChange={(e) => onUpdate("affiliateUrl", e.target.value || null)}
+              placeholder="https://..."
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Review URL</Label>
+            <Input
+              value={item.reviewUrl || ""}
+              onChange={(e) => onUpdate("reviewUrl", e.target.value || null)}
+              placeholder="/reviews/..."
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Rating (0-10)</Label>
+            <Input
+              type="number"
+              min="0"
+              max="10"
+              step="0.1"
+              value={item.rating ?? ""}
+              onChange={(e) =>
+                onUpdate("rating", e.target.value ? parseFloat(e.target.value) : null)
+              }
+              placeholder={brand?.defaultRating?.toString() || "0.0"}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">CTA Text</Label>
+            <Input
+              value={item.cta || ""}
+              onChange={(e) => onUpdate("cta", e.target.value || null)}
+              placeholder="e.g. Play Now"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <Label className="text-xs">Logo Override</Label>
+            <ImageUpload
+              value={item.logoOverride || ""}
+              onChange={(url) => onUpdate("logoOverride", url || null)}
+              type="toplist-item"
+              identifier={`${item.brandId}-${item.id}`}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Terms Override</Label>
+            <Input
+              value={item.termsOverride || ""}
+              onChange={(e) => onUpdate("termsOverride", e.target.value || null)}
+              placeholder={brand?.terms || "e.g. 18+ T&Cs apply"}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">License Override</Label>
+            <Input
+              value={item.licenseOverride || ""}
+              onChange={(e) => onUpdate("licenseOverride", e.target.value || null)}
+              placeholder={brand?.license || "e.g. MGA, Curacao"}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <Label className="text-xs">Pros Override (one per line)</Label>
+            <Textarea
+              value={item.prosOverride?.join("\n") || ""}
+              onChange={(e) => {
+                const lines = e.target.value
+                  .split("\n")
+                  .map((l) => l.trim())
+                  .filter((l) => l.length > 0);
+                onUpdate("prosOverride", lines.length > 0 ? lines : null);
+              }}
+              placeholder={brand?.pros?.join("\n") || "One pro per line"}
+              rows={3}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <Label className="text-xs">Cons Override (one per line)</Label>
+            <Textarea
+              value={item.consOverride?.join("\n") || ""}
+              onChange={(e) => {
+                const lines = e.target.value
+                  .split("\n")
+                  .map((l) => l.trim())
+                  .filter((l) => l.length > 0);
+                onUpdate("consOverride", lines.length > 0 ? lines : null);
+              }}
+              placeholder={brand?.cons?.join("\n") || "One con per line"}
+              rows={3}
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button onClick={() => onOpenChange(false)}>Done</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Main Component ──────────────────────────────────────────────────
+
 export function ToplistTableBuilder({
   items,
   brands,
   columns,
+  columnLabels = {},
   onColumnsChange,
+  onColumnLabelChange,
   onAddBrand,
   onRemoveBrand,
   onReorderItems,
+  onUpdateItem,
 }: ToplistTableBuilderProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [editingItem, setEditingItem] = useState<ToplistItem | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -624,8 +846,9 @@ export function ToplistTableBuilder({
                     <SortableColumnHeader
                       key={colKey}
                       colKey={colKey}
-                      label={COLUMN_REGISTRY[colKey]?.label || colKey}
+                      label={columnLabels[colKey] || COLUMN_REGISTRY[colKey]?.label || colKey}
                       onRemove={() => handleRemoveColumn(colKey)}
+                      onRename={(newLabel) => onColumnLabelChange?.(colKey, newLabel)}
                     />
                   ))}
                   <TableHead className="w-12 bg-gradient-to-b from-zinc-50 to-zinc-100" />
@@ -666,6 +889,7 @@ export function ToplistTableBuilder({
                       columns={columns}
                       position={index + 1}
                       onRemove={() => onRemoveBrand(item.id)}
+                      onEdit={() => setEditingItem(item)}
                     />
                   ))
                 )}
@@ -683,6 +907,19 @@ export function ToplistTableBuilder({
           </div>
         ) : null}
       </DragOverlay>
+
+      {/* Edit modal */}
+      <ItemEditModal
+        item={editingItem}
+        brand={editingItem ? brandMap.get(editingItem.brandId) : undefined}
+        open={!!editingItem}
+        onOpenChange={(open) => !open && setEditingItem(null)}
+        onUpdate={(field, value) => {
+          if (editingItem) {
+            onUpdateItem(editingItem.id, field, value);
+          }
+        }}
+      />
     </DndContext>
   );
 }

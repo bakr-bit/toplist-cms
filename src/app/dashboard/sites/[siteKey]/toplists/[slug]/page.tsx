@@ -29,6 +29,7 @@ interface Brand {
   name: string;
   defaultLogo: string | null;
   defaultBonus: string | null;
+  defaultAffiliateUrl: string | null;
   defaultRating: number | null;
   terms: string | null;
   license: string | null;
@@ -61,6 +62,7 @@ export default function ToplistEditorPage() {
   const [items, setItems] = useState<ToplistItem[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [columns, setColumns] = useState<string[]>(DEFAULT_COLUMNS);
+  const [columnLabels, setColumnLabels] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -153,8 +155,22 @@ export default function ToplistEditorPage() {
     setHasChanges(true);
   }
 
+  function handleColumnLabelChange(colKey: string, label: string) {
+    setColumnLabels((prev) => ({ ...prev, [colKey]: label }));
+    setHasChanges(true);
+  }
+
   function handleReorderItems(newItems: ToplistItem[]) {
     setItems(newItems);
+    setHasChanges(true);
+  }
+
+  function handleUpdateItem(id: string, field: string, value: string | number | string[] | null) {
+    setItems((items) =>
+      items.map((item) =>
+        item.id === id ? { ...item, [field]: value } : item
+      )
+    );
     setHasChanges(true);
   }
 
@@ -242,10 +258,13 @@ export default function ToplistEditorPage() {
         items={items}
         brands={brands}
         columns={columns}
+        columnLabels={columnLabels}
         onColumnsChange={handleColumnsChange}
+        onColumnLabelChange={handleColumnLabelChange}
         onAddBrand={(brandId) => handleAddBrand(brandId)}
         onRemoveBrand={handleRemoveItem}
         onReorderItems={handleReorderItems}
+        onUpdateItem={handleUpdateItem}
       />
 
       {hasChanges && (
