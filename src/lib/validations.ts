@@ -120,6 +120,7 @@ export const toplistItemSchema = z.object({
   licenseOverride: z.string().max(100).optional().nullable(),
   prosOverride: z.array(z.string()).optional().nullable(),
   consOverride: z.array(z.string()).optional().nullable(),
+  paymentMethodsOverride: z.array(z.string()).optional().nullable(),
 });
 
 export const updateToplistItemsSchema = z.object({

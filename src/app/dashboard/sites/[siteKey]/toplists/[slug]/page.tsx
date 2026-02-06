@@ -22,6 +22,7 @@ interface ToplistItem {
   licenseOverride: string | null;
   prosOverride: string[] | null;
   consOverride: string[] | null;
+  paymentMethodsOverride: string[] | null;
 }
 
 interface Brand {
@@ -40,6 +41,7 @@ interface Brand {
   badgeColor: string | null;
   gameProviders: string[] | null;
   gameTypes: string[] | null;
+  paymentMethods: string[] | null;
 }
 
 interface Toplist {
@@ -97,6 +99,7 @@ export default function ToplistEditorPage() {
           licenseOverride: item.licenseOverride,
           prosOverride: item.prosOverride,
           consOverride: item.consOverride,
+          paymentMethodsOverride: item.paymentMethodsOverride,
         }));
         setItems(itemsWithBrands);
       }
@@ -144,6 +147,7 @@ export default function ToplistEditorPage() {
       licenseOverride: null,
       prosOverride: null,
       consOverride: null,
+      paymentMethodsOverride: null,
     };
 
     setItems([...items, newItem]);
@@ -200,6 +204,7 @@ export default function ToplistEditorPage() {
               licenseOverride: item.licenseOverride,
               prosOverride: item.prosOverride,
               consOverride: item.consOverride,
+              paymentMethodsOverride: item.paymentMethodsOverride,
             })),
           }),
         }),

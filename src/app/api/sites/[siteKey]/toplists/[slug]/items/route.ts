@@ -56,6 +56,7 @@ export async function GET(
       licenseOverride: item.licenseOverride,
       prosOverride: item.prosOverride,
       consOverride: item.consOverride,
+      paymentMethodsOverride: item.paymentMethodsOverride,
     }));
 
     return NextResponse.json({
@@ -157,6 +158,10 @@ export async function PUT(
             item.consOverride === null
               ? Prisma.JsonNull
               : item.consOverride ?? undefined,
+          paymentMethodsOverride:
+            item.paymentMethodsOverride === null
+              ? Prisma.JsonNull
+              : item.paymentMethodsOverride ?? undefined,
         })),
       });
 

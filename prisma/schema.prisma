@@ -84,20 +84,21 @@ model Toplist {
 }
 
 model ToplistItem {
-  id              String   @id @default(uuid())
-  toplistId       String
-  brandId         String
-  position        Int
-  bonus           String?
-  affiliateUrl    String?
-  reviewUrl       String?
-  rating          Decimal? @db.Decimal(3, 1)
-  cta             String?
-  logoOverride    String?
-  termsOverride   String?
-  licenseOverride String?
-  prosOverride    Json?
-  consOverride    Json?
+  id                    String   @id @default(uuid())
+  toplistId             String
+  brandId               String
+  position              Int
+  bonus                 String?
+  affiliateUrl          String?
+  reviewUrl             String?
+  rating                Decimal? @db.Decimal(3, 1)
+  cta                   String?
+  logoOverride          String?
+  termsOverride         String?
+  licenseOverride       String?
+  prosOverride          Json?
+  consOverride          Json?
+  paymentMethodsOverride Json?
 
   toplist Toplist @relation(fields: [toplistId], references: [id], onDelete: Cascade)
   brand   Brand   @relation(fields: [brandId], references: [brandId])

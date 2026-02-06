@@ -43,6 +43,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { PAYMENT_METHODS, getPaymentMethodIcon, getPaymentMethodName } from "@/lib/payment-methods";
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -61,6 +62,7 @@ interface ToplistItem {
   licenseOverride: string | null;
   prosOverride: string[] | null;
   consOverride: string[] | null;
+  paymentMethodsOverride: string[] | null;
 }
 
 interface Brand {
@@ -79,6 +81,7 @@ interface Brand {
   badgeColor: string | null;
   gameProviders: string[] | null;
   gameTypes: string[] | null;
+  paymentMethods: string[] | null;
 }
 
 interface ToplistTableBuilderProps {
@@ -261,19 +264,65 @@ const COLUMN_REGISTRY: Record<string, ColumnDef> = {
       );
     },
   },
+  paymentMethods: {
+    label: "Payment Methods",
+    render: (item, brand) => {
+      const methods = item.paymentMethodsOverride || brand?.paymentMethods;
+      return methods && methods.length > 0 ? (
+        <div className="flex items-center gap-1 flex-wrap">
+          {methods.slice(0, 5).map((methodId) => (
+            <div key={methodId} className="text-zinc-600" title={getPaymentMethodName(methodId)}>
+              {getPaymentMethodIcon(methodId)}
+            </div>
+          ))}
+          {methods.length > 5 && (
+            <span className="text-xs text-zinc-400">+{methods.length - 5}</span>
+          )}
+        </div>
+      ) : (
+        <span>—</span>
+      );
+    },
+  },
 };
 
 const ALL_COLUMN_KEYS = Object.keys(COLUMN_REGISTRY);
+
+// ─── Column Icons ────────────────────────────────────────────────────
+
+function getColumnIcon(colKey: string): ReactNode {
+  const icons: Record<string, ReactNode> = {
+    name: <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
+    logo: <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
+    bonus: <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+    rating: <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>,
+    cta: <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" /></svg>,
+    affiliateUrl: <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>,
+    reviewUrl: <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>,
+    terms: <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
+    license: <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
+    pros: <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+    cons: <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+    features: <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>,
+    badgeText: <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
+    gameProviders: <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+    gameTypes: <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" /></svg>,
+    paymentMethods: <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>,
+  };
+  return icons[colKey] || <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>;
+}
 
 // ─── DnD Sub-Components ──────────────────────────────────────────────
 
 const DraggablePaletteItem = memo(function DraggablePaletteItem({
   id,
   type,
+  icon,
   children,
 }: {
   id: string;
   type: string;
+  icon?: ReactNode;
   children: ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -289,11 +338,12 @@ const DraggablePaletteItem = memo(function DraggablePaletteItem({
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className={`px-3 py-2 rounded-lg border-2 text-xs font-medium cursor-grab select-none transition-all ${bgColor} ${textColor} ${
+      className={`px-3 py-2 rounded-lg border-2 text-xs font-medium cursor-grab select-none transition-all flex items-center gap-2 ${bgColor} ${textColor} ${
         isDragging ? "opacity-50 scale-95" : "hover:shadow-md"
       }`}
     >
-      {children}
+      {icon && <span className="shrink-0">{icon}</span>}
+      <span className="truncate">{children}</span>
     </div>
   );
 });
@@ -630,6 +680,46 @@ function ItemEditModal({
               rows={3}
             />
           </div>
+          <div className="md:col-span-2">
+            <Label className="text-xs">Payment Methods Override</Label>
+            <div className="mt-2 p-3 border rounded-lg bg-zinc-50 max-h-48 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-2">
+                {PAYMENT_METHODS.map((method) => {
+                  const selected = item.paymentMethodsOverride?.includes(method.id) || false;
+                  const brandHasIt = brand?.paymentMethods?.includes(method.id) || false;
+
+                  return (
+                    <button
+                      key={method.id}
+                      type="button"
+                      onClick={() => {
+                        const current = item.paymentMethodsOverride || [];
+                        const updated = selected
+                          ? current.filter((id) => id !== method.id)
+                          : [...current, method.id];
+                        onUpdate("paymentMethodsOverride", updated.length > 0 ? updated : null);
+                      }}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-all ${
+                        selected
+                          ? "bg-blue-500 text-white shadow-md"
+                          : brandHasIt
+                          ? "bg-blue-100 text-blue-900 border border-blue-300"
+                          : "bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-100"
+                      }`}
+                    >
+                      <span className="shrink-0">{method.icon}</span>
+                      <span className="truncate">{method.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-zinc-500 mt-3 italic">
+                {brand?.paymentMethods && brand.paymentMethods.length > 0
+                  ? `Brand default: ${brand.paymentMethods.map(id => getPaymentMethodName(id)).join(", ")}`
+                  : "No brand defaults"}
+              </p>
+            </div>
+          </div>
         </div>
 
         <DialogFooter>
@@ -794,6 +884,21 @@ export function ToplistTableBuilder({
                     key={brand.brandId}
                     id={`palette-brand-${brand.brandId}`}
                     type="brand"
+                    icon={
+                      brand.defaultLogo ? (
+                        <img
+                          src={brand.defaultLogo}
+                          alt={brand.name}
+                          className="h-5 w-5 object-contain rounded"
+                        />
+                      ) : (
+                        <div className="h-5 w-5 rounded bg-blue-200 flex items-center justify-center">
+                          <svg className="h-3 w-3 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                          </svg>
+                        </div>
+                      )
+                    }
                   >
                     {brand.name}
                   </DraggablePaletteItem>
@@ -821,6 +926,7 @@ export function ToplistTableBuilder({
                     key={key}
                     id={`palette-col-${key}`}
                     type="column"
+                    icon={getColumnIcon(key)}
                   >
                     {COLUMN_REGISTRY[key]?.label || key}
                   </DraggablePaletteItem>
