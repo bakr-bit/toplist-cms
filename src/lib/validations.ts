@@ -20,6 +20,7 @@ const brandExtendedFields = {
   kycRequired: z.boolean().optional().nullable(),
   noDepositBonus: z.string().max(500).optional().nullable(),
   freeSpinsOffer: z.string().max(500).optional().nullable(),
+  wageringRequirement: z.string().max(200).optional().nullable(),
   loyaltyProgram: z.string().max(500).optional().nullable(),
   promotions: z.string().max(500).optional().nullable(),
   gameProviders: z.array(z.string()).optional().nullable(),

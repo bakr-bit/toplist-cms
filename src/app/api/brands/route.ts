@@ -55,6 +55,7 @@ function mapBrandResponse(b: Record<string, unknown> & { _count?: { toplistItems
     sportsBetting: b.sportsBetting,
     noDepositBonus: b.noDepositBonus,
     freeSpinsOffer: b.freeSpinsOffer,
+    wageringRequirement: b.wageringRequirement,
     loyaltyProgram: b.loyaltyProgram,
     promotions: b.promotions,
     gameProviders: b.gameProviders,

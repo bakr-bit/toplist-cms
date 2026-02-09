@@ -38,6 +38,7 @@ model Brand {
   kycRequired         Boolean?
   noDepositBonus      String?
   freeSpinsOffer      String?
+  wageringRequirement String?
   loyaltyProgram      String?
   promotions          String?
   gameProviders       Json?

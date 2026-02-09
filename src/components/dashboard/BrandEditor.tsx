@@ -242,6 +242,15 @@ function BonusesTab({ state, updateField }: TabProps) {
         />
       </div>
       <div className="space-y-2">
+        <Label htmlFor="wageringRequirement">Wagering Requirement</Label>
+        <Input
+          id="wageringRequirement"
+          value={state.wageringRequirement}
+          onChange={(e) => updateField("wageringRequirement", e.target.value)}
+          placeholder="e.g. 35x"
+        />
+      </div>
+      <div className="space-y-2">
         <Label htmlFor="terms">Terms & Conditions</Label>
         <Input
           id="terms"

@@ -18,6 +18,7 @@ export interface BrandFormState {
   welcomePackage: string;
   noDepositBonus: string;
   freeSpinsOffer: string;
+  wageringRequirement: string;
   terms: string;
   loyaltyProgram: string;
   promotions: string;
@@ -75,6 +76,7 @@ const INITIAL_STATE: BrandFormState = {
   welcomePackage: "",
   noDepositBonus: "",
   freeSpinsOffer: "",
+  wageringRequirement: "",
   terms: "",
   loyaltyProgram: "",
   promotions: "",
@@ -149,6 +151,7 @@ export interface BrandApiData {
   kycRequired: boolean | null;
   noDepositBonus: string | null;
   freeSpinsOffer: string | null;
+  wageringRequirement: string | null;
   loyaltyProgram: string | null;
   promotions: string | null;
   gameProviders: string[] | null;
@@ -180,6 +183,7 @@ function apiToFormState(brand: BrandApiData): BrandFormState {
     welcomePackage: asStr(brand.welcomePackage),
     noDepositBonus: asStr(brand.noDepositBonus),
     freeSpinsOffer: asStr(brand.freeSpinsOffer),
+    wageringRequirement: asStr(brand.wageringRequirement),
     terms: asStr(brand.terms),
     loyaltyProgram: asStr(brand.loyaltyProgram),
     promotions: asStr(brand.promotions),
@@ -265,6 +269,7 @@ export function useBrandForm() {
       welcomePackage: nullIfEmpty(state.welcomePackage),
       noDepositBonus: nullIfEmpty(state.noDepositBonus),
       freeSpinsOffer: nullIfEmpty(state.freeSpinsOffer),
+      wageringRequirement: nullIfEmpty(state.wageringRequirement),
       terms: nullIfEmpty(state.terms),
       loyaltyProgram: nullIfEmpty(state.loyaltyProgram),
       promotions: nullIfEmpty(state.promotions),

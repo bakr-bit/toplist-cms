@@ -83,6 +83,7 @@ export async function GET(
       kycRequired: brand.kycRequired,
       noDepositBonus: brand.noDepositBonus,
       freeSpinsOffer: brand.freeSpinsOffer,
+      wageringRequirement: brand.wageringRequirement,
       loyaltyProgram: brand.loyaltyProgram,
       promotions: brand.promotions,
       gameProviders: brand.gameProviders,

@@ -42,6 +42,9 @@ interface Brand {
   gameProviders: string[] | null;
   gameTypes: string[] | null;
   paymentMethods: string[] | null;
+  freeSpinsOffer: string | null;
+  wageringRequirement: string | null;
+  totalGames: number | null;
 }
 
 interface Toplist {

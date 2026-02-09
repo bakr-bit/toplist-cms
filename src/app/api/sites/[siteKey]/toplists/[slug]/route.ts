@@ -86,6 +86,7 @@ export async function GET(
       sportsBetting: item.brand.sportsBetting,
       noDepositBonus: item.brand.noDepositBonus,
       freeSpinsOffer: item.brand.freeSpinsOffer,
+      wageringRequirement: item.brand.wageringRequirement,
       loyaltyProgram: item.brand.loyaltyProgram,
       promotions: item.brand.promotions,
       gameProviders: item.brand.gameProviders,
