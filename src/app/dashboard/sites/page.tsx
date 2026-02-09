@@ -24,6 +24,7 @@ export default function SitesPage() {
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingSite, setEditingSite] = useState<Site | null>(null);
 
   async function loadSites() {
     try {
@@ -67,7 +68,7 @@ export default function SitesPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-zinc-900">Sites</h1>
-        <Button onClick={() => setDialogOpen(true)}>Add Site</Button>
+        <Button onClick={() => { setEditingSite(null); setDialogOpen(true); }}>Add Site</Button>
       </div>
 
       {loading ? (
@@ -126,6 +127,13 @@ export default function SitesPage() {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => { setEditingSite(site); setDialogOpen(true); }}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => handleDelete(site.siteKey)}
                   >
                     Delete
@@ -140,9 +148,10 @@ export default function SitesPage() {
       <SiteDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
+        site={editingSite}
         onSuccess={() => {
           loadSites();
-          toast.success("Site created");
+          toast.success(editingSite ? "Site updated" : "Site created");
         }}
       />
     </div>

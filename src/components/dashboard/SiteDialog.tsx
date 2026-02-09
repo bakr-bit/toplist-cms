@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,18 +17,41 @@ interface Serp {
   geo: string;
 }
 
+interface SiteData {
+  siteKey: string;
+  domain: string;
+  name: string;
+  serps: Serp[] | null;
+}
+
 interface SiteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  site?: SiteData | null;
 }
 
-export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
+export function SiteDialog({ open, onOpenChange, onSuccess, site }: SiteDialogProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [domain, setDomain] = useState("");
   const [name, setName] = useState("");
   const [serps, setSerps] = useState<Serp[]>([]);
+
+  const isEditing = !!site;
+
+  useEffect(() => {
+    if (site) {
+      setDomain(site.domain);
+      setName(site.name);
+      setSerps(site.serps ?? []);
+    } else {
+      setDomain("");
+      setName("");
+      setSerps([]);
+    }
+    setError("");
+  }, [site, open]);
 
   function addSerp() {
     setSerps([...serps, { keyword: "", geo: "" }]);
@@ -50,7 +73,6 @@ export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
     setLoading(true);
 
     try {
-      // Filter out empty serps and uppercase geo codes
       const validSerps = serps
         .filter((s) => s.keyword.trim() && s.geo.trim())
         .map((s) => ({
@@ -58,19 +80,35 @@ export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
           geo: s.geo.trim().toUpperCase(),
         }));
 
-      const res = await fetch("/api/sites", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          domain: domain.toLowerCase(),
-          name,
-          serps: validSerps.length > 0 ? validSerps : null,
-        }),
-      });
+      if (isEditing) {
+        const res = await fetch(`/api/sites/${site!.siteKey}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            serps: validSerps.length > 0 ? validSerps : null,
+          }),
+        });
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to create site");
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "Failed to update site");
+        }
+      } else {
+        const res = await fetch("/api/sites", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            domain: domain.toLowerCase(),
+            name,
+            serps: validSerps.length > 0 ? validSerps : null,
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "Failed to create site");
+        }
       }
 
       setDomain("");
@@ -89,7 +127,7 @@ export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Site</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Site" : "Add Site"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
@@ -105,10 +143,14 @@ export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
               onChange={(e) => setDomain(e.target.value)}
               placeholder="e.g. cazinou.io"
               required
+              disabled={isEditing}
+              className={isEditing ? "bg-zinc-100 text-zinc-500" : ""}
             />
-            <p className="text-xs text-zinc-500">
-              Site key will be auto-generated (dots to dashes)
-            </p>
+            {!isEditing && (
+              <p className="text-xs text-zinc-500">
+                Site key will be auto-generated (dots to dashes)
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="name">Display Name</Label>
@@ -187,7 +229,7 @@ export function SiteDialog({ open, onOpenChange, onSuccess }: SiteDialogProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Creating..." : "Create"}
+              {loading ? (isEditing ? "Saving..." : "Creating...") : (isEditing ? "Save" : "Create")}
             </Button>
           </div>
         </form>
