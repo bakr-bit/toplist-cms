@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -19,44 +20,7 @@ interface Brand {
   name: string;
   defaultLogo: string | null;
   website: string | null;
-  defaultBonus: string | null;
-  defaultAffiliateUrl: string | null;
   defaultRating: number | null;
-  terms: string | null;
-  license: string | null;
-  description: string | null;
-  pros: string[] | null;
-  cons: string[] | null;
-  yearEstablished: number | null;
-  ownerOperator: string | null;
-  languages: string[] | null;
-  availableCountries: string[] | null;
-  restrictedCountries: string[] | null;
-  currencies: string[] | null;
-  paymentMethods: string[] | null;
-  withdrawalTime: string | null;
-  minDeposit: string | null;
-  minWithdrawal: string | null;
-  maxWithdrawal: string | null;
-  welcomePackage: string | null;
-  sportsBetting: boolean | null;
-  noDepositBonus: string | null;
-  freeSpinsOffer: string | null;
-  loyaltyProgram: string | null;
-  promotions: string | null;
-  gameProviders: string[] | null;
-  totalGames: number | null;
-  gameTypes: string[] | null;
-  exclusiveGames: string | null;
-  supportContacts: string | null;
-  supportHours: string | null;
-  supportLanguages: string[] | null;
-  mobileCompatibility: string | null;
-  registrationProcess: string | null;
-  kycProcess: string | null;
-  features: string[] | null;
-  badgeText: string | null;
-  badgeColor: string | null;
   usageCount: number;
 }
 
@@ -65,7 +29,6 @@ export default function BrandsPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
 
   async function loadBrands() {
     try {
@@ -83,16 +46,6 @@ export default function BrandsPage() {
   useEffect(() => {
     loadBrands();
   }, []);
-
-  function handleAdd() {
-    setEditingBrand(null);
-    setDialogOpen(true);
-  }
-
-  function handleEdit(brand: Brand) {
-    setEditingBrand(brand);
-    setDialogOpen(true);
-  }
 
   async function handleDelete(brandId: string) {
     if (!confirm("Are you sure you want to delete this brand?")) return;
@@ -122,7 +75,7 @@ export default function BrandsPage() {
           >
             Import JSON
           </Button>
-          <Button onClick={handleAdd}>Add Brand</Button>
+          <Button onClick={() => setDialogOpen(true)}>Add Brand</Button>
         </div>
       </div>
 
@@ -163,13 +116,11 @@ export default function BrandsPage() {
                   <TableCell>{brand.usageCount} toplists</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(brand)}
-                      >
-                        Edit
-                      </Button>
+                      <Link href={`/dashboard/brands/${brand.brandId}`}>
+                        <Button variant="outline" size="sm">
+                          Edit
+                        </Button>
+                      </Link>
                       <Button
                         variant="outline"
                         size="sm"
@@ -190,10 +141,9 @@ export default function BrandsPage() {
       <BrandDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        brand={editingBrand}
         onSuccess={() => {
           loadBrands();
-          toast.success(editingBrand ? "Brand updated" : "Brand created");
+          toast.success("Brand created");
         }}
       />
 
