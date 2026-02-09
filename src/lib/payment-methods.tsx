@@ -59,12 +59,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "mifinity",
     name: "MiFinity",
-    icon: (
-      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="#6C2EB9">
-        <circle cx="12" cy="12" r="10" />
-        <text x="12" y="16" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">M</text>
-      </svg>
-    ),
+    icon: <SvgIcon src="/payment-icons/mifinity.svg" alt="MiFinity" />,
   },
   {
     id: "bitcoin",
@@ -74,32 +69,17 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "ethereum",
     name: "Ethereum",
-    icon: (
-      <svg className="h-5 w-5" viewBox="0 0 24 24">
-        <path d="M12 1.5l-8 10.3 8 4.7 8-4.7z" fill="#627EEA" />
-        <path d="M4 11.8l8 10.7 8-10.7-8 4.7z" fill="#627EEA" opacity="0.6" />
-      </svg>
-    ),
+    icon: <SvgIcon src="/payment-icons/ethereum.svg" alt="Ethereum" />,
   },
   {
     id: "crypto",
     name: "Crypto",
-    icon: (
-      <svg className="h-5 w-5" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" fill="#F7931A" />
-        <text x="12" y="16" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">&#x20BF;</text>
-      </svg>
-    ),
+    icon: <SvgIcon src="/payment-icons/crypto.svg" alt="Crypto" />,
   },
   {
     id: "revolut",
     name: "Revolut",
-    icon: (
-      <svg className="h-5 w-5" viewBox="0 0 24 24">
-        <rect x="1" y="1" width="22" height="22" rx="6" fill="#0075EB" />
-        <text x="12" y="16" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">R</text>
-      </svg>
-    ),
+    icon: <SvgIcon src="/payment-icons/revolut.svg" alt="Revolut" />,
   },
   {
     id: "apple-pay",
