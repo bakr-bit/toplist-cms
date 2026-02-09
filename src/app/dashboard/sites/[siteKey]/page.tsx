@@ -164,7 +164,8 @@ export default function SiteDetailPage() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filteredToplists.map((toplist) => (
-                <Card key={toplist.id} className="hover:shadow-md transition-shadow">
+                <Link key={toplist.id} href={`/dashboard/sites/${siteKey}/toplists/${toplist.slug}`}>
+                <Card className="hover:shadow-md transition-shadow cursor-pointer">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg">
                       {toplist.title || toplist.slug}
@@ -180,11 +181,12 @@ export default function SiteDetailPage() {
                     {toplist.pages.length > 0 && (
                       <div className="mb-4">
                         <button
-                          onClick={() =>
+                          onClick={(e) => {
+                            e.preventDefault();
                             setExpandedPages(
                               expandedPages === toplist.id ? null : toplist.id
-                            )
-                          }
+                            );
+                          }}
                           className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
                         >
                           {toplist.pages.length} page
@@ -204,23 +206,17 @@ export default function SiteDetailPage() {
                     )}
                     {toplist.pages.length === 0 && <div className="mb-4" />}
                     <div className="flex gap-2">
-                      <Link
-                        href={`/dashboard/sites/${siteKey}/toplists/${toplist.slug}`}
-                      >
-                        <Button variant="outline" size="sm">
-                          Edit
-                        </Button>
-                      </Link>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDeleteToplist(toplist.slug)}
+                        onClick={(e) => { e.preventDefault(); handleDeleteToplist(toplist.slug); }}
                       >
                         Delete
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
+                </Link>
               ))}
             </div>
           )}
