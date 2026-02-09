@@ -78,7 +78,8 @@ export default function SitesPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {sites.map((site) => (
-            <Card key={site.siteKey} className="hover:shadow-md transition-shadow">
+            <Link key={site.siteKey} href={`/dashboard/sites/${site.siteKey}`}>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-3">
                   <img
@@ -119,28 +120,24 @@ export default function SitesPage() {
                   {site.toplistCount} toplist{site.toplistCount !== 1 ? "s" : ""}
                 </p>
                 <div className="flex gap-2">
-                  <Link href={`/dashboard/sites/${site.siteKey}`}>
-                    <Button variant="outline" size="sm">
-                      Manage
-                    </Button>
-                  </Link>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => { setEditingSite(site); setDialogOpen(true); }}
+                    onClick={(e) => { e.preventDefault(); setEditingSite(site); setDialogOpen(true); }}
                   >
                     Edit
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDelete(site.siteKey)}
+                    onClick={(e) => { e.preventDefault(); handleDelete(site.siteKey); }}
                   >
                     Delete
                   </Button>
                 </div>
               </CardContent>
             </Card>
+            </Link>
           ))}
         </div>
       )}
