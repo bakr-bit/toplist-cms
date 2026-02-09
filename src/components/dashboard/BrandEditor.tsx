@@ -268,18 +268,59 @@ function BonusesTab({ state, updateField }: TabProps) {
           placeholder="e.g. Weekly cashback, tournaments"
         />
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="sportsBetting">Sports Betting</Label>
-        <select
-          id="sportsBetting"
-          value={state.sportsBetting}
-          onChange={(e) => updateField("sportsBetting", e.target.value)}
-          className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        >
-          <option value="">Not specified</option>
-          <option value="yes">Yes</option>
-          <option value="no">No</option>
-        </select>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="sportsBetting">Sports Betting</Label>
+          <select
+            id="sportsBetting"
+            value={state.sportsBetting}
+            onChange={(e) => updateField("sportsBetting", e.target.value)}
+            className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="">Not specified</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="cryptoCasino">Crypto</Label>
+          <select
+            id="cryptoCasino"
+            value={state.cryptoCasino}
+            onChange={(e) => updateField("cryptoCasino", e.target.value)}
+            className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="">Not specified</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="vpnAllowed">VPN Allowed</Label>
+          <select
+            id="vpnAllowed"
+            value={state.vpnAllowed}
+            onChange={(e) => updateField("vpnAllowed", e.target.value)}
+            className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="">Not specified</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="kycRequired">KYC Required</Label>
+          <select
+            id="kycRequired"
+            value={state.kycRequired}
+            onChange={(e) => updateField("kycRequired", e.target.value)}
+            className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="">Not specified</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="defaultAffiliateUrl">Default Affiliate URL</Label>

@@ -22,6 +22,9 @@ export interface BrandFormState {
   loyaltyProgram: string;
   promotions: string;
   sportsBetting: string;
+  cryptoCasino: string;
+  vpnAllowed: string;
+  kycRequired: string;
 
   // Financial
   currencies: string[];
@@ -76,6 +79,9 @@ const INITIAL_STATE: BrandFormState = {
   loyaltyProgram: "",
   promotions: "",
   sportsBetting: "",
+  cryptoCasino: "",
+  vpnAllowed: "",
+  kycRequired: "",
   currencies: [],
   paymentMethods: [],
   minDeposit: "",
@@ -138,6 +144,9 @@ export interface BrandApiData {
   maxWithdrawal: string | null;
   welcomePackage: string | null;
   sportsBetting: boolean | null;
+  cryptoCasino: boolean | null;
+  vpnAllowed: boolean | null;
+  kycRequired: boolean | null;
   noDepositBonus: string | null;
   freeSpinsOffer: string | null;
   loyaltyProgram: string | null;
@@ -175,6 +184,9 @@ function apiToFormState(brand: BrandApiData): BrandFormState {
     loyaltyProgram: asStr(brand.loyaltyProgram),
     promotions: asStr(brand.promotions),
     sportsBetting: brand.sportsBetting === true ? "yes" : brand.sportsBetting === false ? "no" : "",
+    cryptoCasino: brand.cryptoCasino === true ? "yes" : brand.cryptoCasino === false ? "no" : "",
+    vpnAllowed: brand.vpnAllowed === true ? "yes" : brand.vpnAllowed === false ? "no" : "",
+    kycRequired: brand.kycRequired === true ? "yes" : brand.kycRequired === false ? "no" : "",
     currencies: asArr(brand.currencies),
     paymentMethods: asArr(brand.paymentMethods),
     minDeposit: asStr(brand.minDeposit),
@@ -257,11 +269,13 @@ export function useBrandForm() {
       loyaltyProgram: nullIfEmpty(state.loyaltyProgram),
       promotions: nullIfEmpty(state.promotions),
       sportsBetting:
-        state.sportsBetting === "yes"
-          ? true
-          : state.sportsBetting === "no"
-            ? false
-            : null,
+        state.sportsBetting === "yes" ? true : state.sportsBetting === "no" ? false : null,
+      cryptoCasino:
+        state.cryptoCasino === "yes" ? true : state.cryptoCasino === "no" ? false : null,
+      vpnAllowed:
+        state.vpnAllowed === "yes" ? true : state.vpnAllowed === "no" ? false : null,
+      kycRequired:
+        state.kycRequired === "yes" ? true : state.kycRequired === "no" ? false : null,
       currencies: arrOrNull(state.currencies),
       paymentMethods: arrOrNull(state.paymentMethods),
       minDeposit: nullIfEmpty(state.minDeposit),

@@ -33,6 +33,9 @@ model Brand {
   maxWithdrawal       String?
   welcomePackage      String?
   sportsBetting       Boolean?
+  cryptoCasino        Boolean?
+  vpnAllowed          Boolean?
+  kycRequired         Boolean?
   noDepositBonus      String?
   freeSpinsOffer      String?
   loyaltyProgram      String?
