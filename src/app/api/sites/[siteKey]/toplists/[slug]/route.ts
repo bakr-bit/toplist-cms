@@ -109,6 +109,7 @@ export async function GET(
         slug: toplist.slug,
         title: toplist.title,
         columns: toplist.columns,
+        columnLabels: toplist.columnLabels,
         updatedAt: toplist.updatedAt.toISOString(),
         items,
       },
@@ -145,10 +146,13 @@ export async function PUT(
       );
     }
 
-    const { columns, ...rest } = validation.data;
+    const { columns, columnLabels, ...rest } = validation.data;
     const data: any = { ...rest };
     if (columns !== undefined) {
       data.columns = columns === null ? Prisma.JsonNull : columns;
+    }
+    if (columnLabels !== undefined) {
+      data.columnLabels = columnLabels === null ? Prisma.JsonNull : columnLabels;
     }
 
     const toplist = await prisma.toplist.update({

@@ -105,6 +105,7 @@ export const createToplistSchema = z.object({
 export const updateToplistSchema = z.object({
   title: z.string().max(200).optional().nullable(),
   columns: z.array(z.string().max(50)).max(30).optional().nullable(),
+  columnLabels: z.record(z.string().max(50), z.string().max(100)).optional().nullable(),
 });
 
 // Toplist items schema

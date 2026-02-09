@@ -381,8 +381,9 @@ const SortableColumnHeader = memo(function SortableColumnHeader({
   };
 
   const handleSaveRename = () => {
-    if (editValue.trim() && editValue !== label) {
-      onRename(editValue.trim());
+    const newLabel = editValue.trim();
+    if (newLabel !== label) {
+      onRename(newLabel);
     }
     setIsEditing(false);
   };
@@ -421,7 +422,7 @@ const SortableColumnHeader = memo(function SortableColumnHeader({
             onDoubleClick={() => setIsEditing(true)}
             title="Double-click to rename"
           >
-            {label}
+            {label || "\u00A0"}
           </span>
         )}
         <button
@@ -953,7 +954,7 @@ export function ToplistTableBuilder({
                     <SortableColumnHeader
                       key={colKey}
                       colKey={colKey}
-                      label={columnLabels[colKey] || COLUMN_REGISTRY[colKey]?.label || colKey}
+                      label={colKey in columnLabels ? columnLabels[colKey] : (COLUMN_REGISTRY[colKey]?.label || colKey)}
                       onRemove={() => handleRemoveColumn(colKey)}
                       onRename={(newLabel) => onColumnLabelChange?.(colKey, newLabel)}
                     />

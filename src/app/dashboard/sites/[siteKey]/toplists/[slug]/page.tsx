@@ -83,6 +83,10 @@ export default function ToplistEditorPage() {
         if (Array.isArray(data.columns) && data.columns.length > 0) {
           setColumns(data.columns);
         }
+        // Load column labels from API
+        if (data.columnLabels && typeof data.columnLabels === "object") {
+          setColumnLabels(data.columnLabels);
+        }
         // Transform items with raw override values
         const itemsWithBrands = data.items.map((item: any, index: number) => ({
           id: `item-${index}`,
@@ -117,6 +121,15 @@ export default function ToplistEditorPage() {
   useEffect(() => {
     loadData();
   }, [siteKey, slug]);
+
+  useEffect(() => {
+    if (!hasChanges) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [hasChanges]);
 
   function handleRemoveItem(id: string) {
     setItems((items) => items.filter((item) => item.id !== id));
@@ -186,7 +199,7 @@ export default function ToplistEditorPage() {
         fetch(`/api/sites/${siteKey}/toplists/${slug}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ columns }),
+          body: JSON.stringify({ columns, columnLabels }),
         }),
         fetch(`/api/sites/${siteKey}/toplists/${slug}/items`, {
           method: "PUT",
@@ -245,18 +258,11 @@ export default function ToplistEditorPage() {
         </Link>
       </div>
 
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-900">
-            {toplist.title || toplist.slug}
-          </h1>
-          <p className="text-zinc-500">/{toplist.slug}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={handleSave} disabled={!hasChanges || saving}>
-            {saving ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-zinc-900">
+          {toplist.title || toplist.slug}
+        </h1>
+        <p className="text-zinc-500">/{toplist.slug}</p>
       </div>
 
       <ToplistTableBuilder
@@ -273,10 +279,16 @@ export default function ToplistEditorPage() {
       />
 
       {hasChanges && (
-        <div className="fixed bottom-6 right-6">
-          <Button onClick={handleSave} disabled={saving} size="lg">
-            {saving ? "Saving..." : "Save Changes"}
-          </Button>
+        <div className="fixed bottom-0 left-0 right-0 bg-amber-50 border-t border-amber-200 px-6 py-3 flex items-center justify-between z-50">
+          <span className="text-sm text-amber-800 font-medium">You have unsaved changes</span>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => { loadData(); setHasChanges(false); }}>
+              Discard
+            </Button>
+            <Button size="sm" onClick={handleSave} disabled={saving}>
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
         </div>
       )}
     </div>
