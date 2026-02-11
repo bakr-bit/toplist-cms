@@ -1,11 +1,5 @@
 import { z } from "zod";
 
-// Allow both full URLs and relative paths (starting with /)
-const urlOrPath = z.string().refine(
-  (val) => val.startsWith("/") || /^https?:\/\//.test(val),
-  { message: "Must be a valid URL or a path starting with /" }
-);
-
 // Shared brand extended fields (used by both create and update schemas)
 const brandExtendedFields = {
   yearEstablished: z.number().int().min(1900).max(2100).optional().nullable(),
@@ -52,10 +46,10 @@ export const createBrandSchema = z.object({
     .max(100)
     .regex(/^[a-z0-9-]+$/, "Brand ID must be lowercase alphanumeric with dashes"),
   name: z.string().min(1).max(200),
-  defaultLogo: urlOrPath.optional().nullable(),
+  defaultLogo: z.string().url().optional().nullable(),
   website: z.string().url().optional().nullable(),
   defaultBonus: z.string().max(500).optional().nullable(),
-  defaultAffiliateUrl: urlOrPath.optional().nullable(),
+  defaultAffiliateUrl: z.string().url().optional().nullable(),
   defaultRating: z.number().min(0).max(10).optional().nullable(),
   terms: z.string().max(500).optional().nullable(),
   license: z.string().max(100).optional().nullable(),
@@ -67,10 +61,10 @@ export const createBrandSchema = z.object({
 
 export const updateBrandSchema = z.object({
   name: z.string().min(1).max(200).optional(),
-  defaultLogo: urlOrPath.optional().nullable(),
+  defaultLogo: z.string().url().optional().nullable(),
   website: z.string().url().optional().nullable(),
   defaultBonus: z.string().max(500).optional().nullable(),
-  defaultAffiliateUrl: urlOrPath.optional().nullable(),
+  defaultAffiliateUrl: z.string().url().optional().nullable(),
   defaultRating: z.number().min(0).max(10).optional().nullable(),
   terms: z.string().max(500).optional().nullable(),
   license: z.string().max(100).optional().nullable(),
@@ -122,11 +116,11 @@ export const updateToplistSchema = z.object({
 export const toplistItemSchema = z.object({
   brandId: z.string().min(1),
   bonus: z.string().max(500).optional().nullable(),
-  affiliateUrl: urlOrPath.optional().nullable(),
+  affiliateUrl: z.string().url().optional().nullable(),
   reviewUrl: z.string().max(500).optional().nullable(),
   rating: z.number().min(0).max(10).optional().nullable(),
   cta: z.string().max(100).optional().nullable(),
-  logoOverride: urlOrPath.optional().nullable(),
+  logoOverride: z.string().url().optional().nullable(),
   termsOverride: z.string().max(500).optional().nullable(),
   licenseOverride: z.string().max(100).optional().nullable(),
   prosOverride: z.array(z.string()).optional().nullable(),
