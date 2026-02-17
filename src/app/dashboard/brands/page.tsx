@@ -184,7 +184,6 @@ export default function BrandsPage() {
                 <TableHead className="w-16">Logo</TableHead>
                 <TableHead>Brand ID</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Usage</TableHead>
                 <TableHead className="w-32">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -210,7 +209,6 @@ export default function BrandsPage() {
                     {brand.brandId}
                   </TableCell>
                   <TableCell className="font-medium">{brand.name}</TableCell>
-                  <TableCell>{brand.usageCount} toplists</TableCell>
                   <TableCell>
                     <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                       <Link href={`/dashboard/brands/${brand.brandId}`}>
@@ -239,7 +237,10 @@ export default function BrandsPage() {
       <Dialog open={detailBrand !== null || detailLoading} onOpenChange={(open) => { if (!open) setDetailBrand(null); }}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
           {detailLoading ? (
-            <div className="py-8 text-center text-zinc-500">Loading...</div>
+            <div className="py-8 text-center text-zinc-500">
+              <DialogTitle className="sr-only">Loading brand</DialogTitle>
+              Loading...
+            </div>
           ) : detailBrand && (
             <>
               <DialogHeader>
