@@ -131,11 +131,17 @@ export const updateToplistSchema = z.object({
   columnLabels: z.record(z.string().max(50), z.string().max(100)).optional().nullable(),
 });
 
-// Toplist items schema (simplified — no more overrides)
+// Toplist items schema
 export const toplistItemSchema = z.object({
   brandId: z.string().min(1),
   cta: z.string().max(100).optional().nullable(),
   reviewUrl: z.string().max(500).optional().nullable(),
+  // Per-toplist text overrides (override SiteBrand defaults)
+  bonus: z.string().max(500).optional().nullable(),
+  description: z.string().optional().nullable(),
+  terms: z.string().max(500).optional().nullable(),
+  badgeText: z.string().max(200).optional().nullable(),
+  badgeColor: z.string().max(50).optional().nullable(),
 });
 
 export const updateToplistItemsSchema = z.object({

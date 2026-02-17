@@ -52,6 +52,12 @@ export interface ToplistItem {
   brandLogo: string | null;
   cta: string | null;
   reviewUrl: string | null;
+  // Per-toplist text overrides
+  overrideBonus: string | null;
+  overrideDescription: string | null;
+  overrideTerms: string | null;
+  overrideBadgeText: string | null;
+  overrideBadgeColor: string | null;
   // SiteBrand data (read-only display)
   bonus: string | null;
   affiliateUrl: string | null;
@@ -124,9 +130,15 @@ const COLUMN_REGISTRY: Record<string, ColumnDef> = {
   },
   bonus: {
     label: "Bonus",
-    render: (item) => (
-      <span>{item.bonus || "—"}</span>
-    ),
+    render: (item) => {
+      const value = item.overrideBonus || item.bonus;
+      return (
+        <span>
+          {value || "—"}
+          {item.overrideBonus && <span className="ml-1 text-[10px] text-amber-600" title="Overridden for this toplist">*</span>}
+        </span>
+      );
+    },
   },
   rating: {
     label: "Rating",
@@ -177,11 +189,15 @@ const COLUMN_REGISTRY: Record<string, ColumnDef> = {
   },
   terms: {
     label: "Terms",
-    render: (item) => (
-      <span className="max-w-[200px] truncate block text-xs">
-        {item.terms || "—"}
-      </span>
-    ),
+    render: (item) => {
+      const value = item.overrideTerms || item.terms;
+      return (
+        <span className="max-w-[200px] truncate block text-xs">
+          {value || "—"}
+          {item.overrideTerms && <span className="ml-1 text-[10px] text-amber-600" title="Overridden for this toplist">*</span>}
+        </span>
+      );
+    },
   },
   license: {
     label: "License",
@@ -250,9 +266,15 @@ const COLUMN_REGISTRY: Record<string, ColumnDef> = {
   },
   badgeText: {
     label: "Badge",
-    render: (item) => (
-      <span>{item.badgeText || "—"}</span>
-    ),
+    render: (item) => {
+      const value = item.overrideBadgeText || item.badgeText;
+      return (
+        <span>
+          {value || "—"}
+          {item.overrideBadgeText && <span className="ml-1 text-[10px] text-amber-600" title="Overridden for this toplist">*</span>}
+        </span>
+      );
+    },
   },
   gameProviders: {
     label: "Game Providers",
@@ -614,21 +636,64 @@ function ItemEditModal({
             />
           </div>
 
-          {/* Read-only SiteBrand info */}
+          {/* Per-toplist text overrides */}
           <div className="border-t pt-4 mt-2">
             <p className="text-xs text-zinc-500 mb-3">
-              Deal data is managed per-site.{" "}
+              Override text for this toplist only. Leave blank to use the{" "}
               <a
                 href={`/dashboard/sites/${siteKey}/brands/${item.brandId}`}
                 className="text-blue-600 hover:underline"
                 onClick={(e) => e.stopPropagation()}
               >
-                Edit deal for this site
-              </a>
+                site-level default
+              </a>.
             </p>
-            {item.bonus && (
-              <p className="text-xs text-zinc-600"><strong>Bonus:</strong> {item.bonus}</p>
-            )}
+            <div className="grid gap-3">
+              <div>
+                <Label className="text-xs">Bonus Override</Label>
+                <Input
+                  value={item.overrideBonus || ""}
+                  onChange={(e) => onUpdate("overrideBonus", e.target.value || null)}
+                  placeholder={item.bonus || "No site default"}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Description Override</Label>
+                <Input
+                  value={item.overrideDescription || ""}
+                  onChange={(e) => onUpdate("overrideDescription", e.target.value || null)}
+                  placeholder={item.description || "No site default"}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Terms Override</Label>
+                <Input
+                  value={item.overrideTerms || ""}
+                  onChange={(e) => onUpdate("overrideTerms", e.target.value || null)}
+                  placeholder={item.terms || "No site default"}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Badge Text Override</Label>
+                <Input
+                  value={item.overrideBadgeText || ""}
+                  onChange={(e) => onUpdate("overrideBadgeText", e.target.value || null)}
+                  placeholder={item.badgeText || "No site default"}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Badge Color Override</Label>
+                <Input
+                  value={item.overrideBadgeColor || ""}
+                  onChange={(e) => onUpdate("overrideBadgeColor", e.target.value || null)}
+                  placeholder={item.badgeColor || "No site default"}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Read-only SiteBrand info */}
+          <div className="border-t pt-4 mt-2">
             {item.rating != null && (
               <p className="text-xs text-zinc-600"><strong>Rating:</strong> {item.rating.toFixed(1)}</p>
             )}

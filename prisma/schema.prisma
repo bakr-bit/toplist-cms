@@ -81,6 +81,12 @@ model ToplistItem {
   position  Int
   cta       String?
   reviewUrl String?
+  // Per-toplist text overrides (override SiteBrand defaults)
+  bonus      String?
+  description String?
+  terms      String?
+  badgeText  String?
+  badgeColor String?
 
   toplist Toplist @relation(fields: [toplistId], references: [id], onDelete: Cascade)
   brand   Brand   @relation(fields: [brandId], references: [brandId])

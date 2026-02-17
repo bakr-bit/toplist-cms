@@ -14,6 +14,12 @@ interface ToplistItem {
   brandLogo: string | null;
   cta: string | null;
   reviewUrl: string | null;
+  // Per-toplist text overrides
+  overrideBonus: string | null;
+  overrideDescription: string | null;
+  overrideTerms: string | null;
+  overrideBadgeText: string | null;
+  overrideBadgeColor: string | null;
   // SiteBrand data (read-only display)
   bonus: string | null;
   affiliateUrl: string | null;
@@ -94,6 +100,12 @@ export default function ToplistEditorPage() {
           brandLogo: item.brandLogo,
           cta: item.cta,
           reviewUrl: item.reviewUrl,
+          // Per-toplist text overrides
+          overrideBonus: item.overrideBonus,
+          overrideDescription: item.overrideDescription,
+          overrideTerms: item.overrideTerms,
+          overrideBadgeText: item.overrideBadgeText,
+          overrideBadgeColor: item.overrideBadgeColor,
           // SiteBrand data (read-only)
           bonus: item.bonus,
           affiliateUrl: item.affiliateUrl,
@@ -158,6 +170,12 @@ export default function ToplistEditorPage() {
       brandLogo: brand.defaultLogo,
       cta: null,
       reviewUrl: null,
+      // Per-toplist text overrides
+      overrideBonus: null,
+      overrideDescription: null,
+      overrideTerms: null,
+      overrideBadgeText: null,
+      overrideBadgeColor: null,
       // SiteBrand data will be null for newly added brands
       bonus: null,
       affiliateUrl: null,
@@ -222,6 +240,11 @@ export default function ToplistEditorPage() {
               brandId: item.brandId,
               cta: item.cta,
               reviewUrl: item.reviewUrl,
+              bonus: item.overrideBonus,
+              description: item.overrideDescription,
+              terms: item.overrideTerms,
+              badgeText: item.overrideBadgeText,
+              badgeColor: item.overrideBadgeColor,
             })),
           }),
         }),

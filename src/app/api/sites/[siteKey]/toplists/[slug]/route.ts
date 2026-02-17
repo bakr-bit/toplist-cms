@@ -71,12 +71,12 @@ export async function GET(
         logo: sb?.logo || item.brand.defaultLogo,
         affiliateUrl: sb?.affiliateUrl || null,
         reviewUrl: item.reviewUrl,
-        bonus: sb?.bonus || null,
+        bonus: item.bonus || sb?.bonus || null,
         rating: sb?.rating ? Number(sb.rating) : null,
         cta: item.cta,
-        terms: sb?.terms || null,
+        terms: item.terms || sb?.terms || null,
         license: item.brand.license,
-        description: sb?.description || null,
+        description: item.description || sb?.description || null,
         pros: sb?.pros || null,
         cons: sb?.cons || null,
         website: item.brand.website,
@@ -109,8 +109,8 @@ export async function GET(
         registrationProcess: item.brand.registrationProcess,
         kycProcess: item.brand.kycProcess,
         features: sb?.features || null,
-        badgeText: sb?.badgeText || null,
-        badgeColor: sb?.badgeColor || null,
+        badgeText: item.badgeText || sb?.badgeText || null,
+        badgeColor: item.badgeColor || sb?.badgeColor || null,
       };
     });
 

@@ -61,6 +61,12 @@ export async function GET(
         brandLogo: sb?.logo || item.brand.defaultLogo,
         cta: item.cta,
         reviewUrl: item.reviewUrl,
+        // Per-toplist text overrides
+        overrideBonus: item.bonus || null,
+        overrideDescription: item.description || null,
+        overrideTerms: item.terms || null,
+        overrideBadgeText: item.badgeText || null,
+        overrideBadgeColor: item.badgeColor || null,
         // SiteBrand data for display (read-only in toplist context)
         bonus: sb?.bonus || null,
         affiliateUrl: sb?.affiliateUrl || null,
@@ -158,7 +164,7 @@ export async function PUT(
         where: { toplistId: toplist.id },
       });
 
-      // Create new items with positions (simplified — no overrides)
+      // Create new items with positions
       await tx.toplistItem.createMany({
         data: validation.data.items.map((item, index) => ({
           toplistId: toplist.id,
@@ -166,6 +172,11 @@ export async function PUT(
           position: index,
           cta: item.cta,
           reviewUrl: item.reviewUrl,
+          bonus: item.bonus,
+          description: item.description,
+          terms: item.terms,
+          badgeText: item.badgeText,
+          badgeColor: item.badgeColor,
         })),
       });
 
