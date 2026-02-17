@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions, isValidApiKey } from "@/lib/auth";
@@ -41,23 +40,45 @@ export async function GET(
       );
     }
 
-    // Return raw item data with override fields (not resolved)
-    const items = toplist.items.map((item) => ({
-      brandId: item.brandId,
-      brandName: item.brand.name,
-      brandLogo: item.brand.defaultLogo,
-      bonus: item.bonus,
-      affiliateUrl: item.affiliateUrl,
-      reviewUrl: item.reviewUrl,
-      rating: item.rating ? Number(item.rating) : null,
-      cta: item.cta,
-      logoOverride: item.logoOverride,
-      termsOverride: item.termsOverride,
-      licenseOverride: item.licenseOverride,
-      prosOverride: item.prosOverride,
-      consOverride: item.consOverride,
-      paymentMethodsOverride: item.paymentMethodsOverride,
-    }));
+    // Fetch SiteBrands for display alongside items
+    const brandIds = toplist.items.map((item) => item.brandId);
+    const siteBrands = await prisma.siteBrand.findMany({
+      where: {
+        siteKey: toplist.siteKey,
+        brandId: { in: brandIds },
+      },
+    });
+    const siteBrandMap = new Map(
+      siteBrands.map((sb) => [sb.brandId, sb])
+    );
+
+    // Return simplified item data + SiteBrand info for display
+    const items = toplist.items.map((item) => {
+      const sb = siteBrandMap.get(item.brandId);
+      return {
+        brandId: item.brandId,
+        brandName: item.brand.name,
+        brandLogo: sb?.logo || item.brand.defaultLogo,
+        cta: item.cta,
+        reviewUrl: item.reviewUrl,
+        // SiteBrand data for display (read-only in toplist context)
+        bonus: sb?.bonus || null,
+        affiliateUrl: sb?.affiliateUrl || null,
+        rating: sb?.rating ? Number(sb.rating) : null,
+        terms: sb?.terms || null,
+        description: sb?.description || null,
+        pros: sb?.pros || null,
+        cons: sb?.cons || null,
+        features: sb?.features || null,
+        badgeText: sb?.badgeText || null,
+        badgeColor: sb?.badgeColor || null,
+        freeSpinsOffer: sb?.freeSpinsOffer || null,
+        wageringRequirement: sb?.wageringRequirement || null,
+        welcomePackage: sb?.welcomePackage || null,
+        loyaltyProgram: sb?.loyaltyProgram || null,
+        promotions: sb?.promotions || null,
+      };
+    });
 
     return NextResponse.json({
       siteKey: toplist.siteKey,
@@ -137,32 +158,14 @@ export async function PUT(
         where: { toplistId: toplist.id },
       });
 
-      // Create new items with positions
+      // Create new items with positions (simplified — no overrides)
       await tx.toplistItem.createMany({
         data: validation.data.items.map((item, index) => ({
           toplistId: toplist.id,
           brandId: item.brandId,
           position: index,
-          bonus: item.bonus,
-          affiliateUrl: item.affiliateUrl,
-          reviewUrl: item.reviewUrl,
-          rating: item.rating,
           cta: item.cta,
-          logoOverride: item.logoOverride,
-          termsOverride: item.termsOverride,
-          licenseOverride: item.licenseOverride,
-          prosOverride:
-            item.prosOverride === null
-              ? Prisma.JsonNull
-              : item.prosOverride ?? undefined,
-          consOverride:
-            item.consOverride === null
-              ? Prisma.JsonNull
-              : item.consOverride ?? undefined,
-          paymentMethodsOverride:
-            item.paymentMethodsOverride === null
-              ? Prisma.JsonNull
-              : item.paymentMethodsOverride ?? undefined,
+          reviewUrl: item.reviewUrl,
         })),
       });
 

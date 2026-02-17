@@ -7,9 +7,9 @@ import { createBrandSchema } from "@/lib/validations";
 
 // JSON fields that need Prisma.JsonNull handling
 const jsonFields = [
-  "pros", "cons", "languages", "availableCountries", "restrictedCountries",
+  "languages", "availableCountries", "restrictedCountries",
   "currencies", "paymentMethods", "gameProviders", "gameTypes",
-  "supportLanguages", "features",
+  "supportLanguages",
 ] as const;
 
 function transformJsonFields(data: Record<string, unknown>) {
@@ -26,20 +26,13 @@ function transformJsonFields(data: Record<string, unknown>) {
   return result;
 }
 
-function mapBrandResponse(b: Record<string, unknown> & { _count?: { toplistItems: number }; defaultRating?: unknown; createdAt?: Date; updatedAt?: Date }) {
+function mapBrandResponse(b: Record<string, unknown> & { _count?: { toplistItems: number }; createdAt?: Date; updatedAt?: Date }) {
   return {
     brandId: b.brandId,
     name: b.name,
     defaultLogo: b.defaultLogo,
     website: b.website,
-    defaultBonus: b.defaultBonus,
-    defaultAffiliateUrl: b.defaultAffiliateUrl,
-    defaultRating: b.defaultRating ? Number(b.defaultRating) : null,
-    terms: b.terms,
     license: b.license,
-    description: b.description,
-    pros: b.pros,
-    cons: b.cons,
     yearEstablished: b.yearEstablished,
     ownerOperator: b.ownerOperator,
     languages: b.languages,
@@ -51,13 +44,10 @@ function mapBrandResponse(b: Record<string, unknown> & { _count?: { toplistItems
     minDeposit: b.minDeposit,
     minWithdrawal: b.minWithdrawal,
     maxWithdrawal: b.maxWithdrawal,
-    welcomePackage: b.welcomePackage,
     sportsBetting: b.sportsBetting,
-    noDepositBonus: b.noDepositBonus,
-    freeSpinsOffer: b.freeSpinsOffer,
-    wageringRequirement: b.wageringRequirement,
-    loyaltyProgram: b.loyaltyProgram,
-    promotions: b.promotions,
+    cryptoCasino: b.cryptoCasino,
+    vpnAllowed: b.vpnAllowed,
+    kycRequired: b.kycRequired,
     gameProviders: b.gameProviders,
     totalGames: b.totalGames,
     gameTypes: b.gameTypes,
@@ -68,9 +58,6 @@ function mapBrandResponse(b: Record<string, unknown> & { _count?: { toplistItems
     mobileCompatibility: b.mobileCompatibility,
     registrationProcess: b.registrationProcess,
     kycProcess: b.kycProcess,
-    features: b.features,
-    badgeText: b.badgeText,
-    badgeColor: b.badgeColor,
     usageCount: b._count?.toplistItems,
     createdAt: b.createdAt?.toISOString(),
     updatedAt: b.updatedAt?.toISOString(),

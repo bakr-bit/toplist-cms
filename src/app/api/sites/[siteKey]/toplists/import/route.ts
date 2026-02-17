@@ -134,10 +134,6 @@ export async function POST(
             return {
               brandId: itemId,
               position: index + 1,
-              logoOverride: itemData.logo || null,
-              affiliateUrl: itemData.affiliateUrl || null,
-              bonus: itemData.bonus || null,
-              rating: itemData.rating ?? null,
             };
           })
           .filter((item): item is NonNullable<typeof item> => item !== null);

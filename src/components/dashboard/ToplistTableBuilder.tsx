@@ -41,63 +41,58 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { ImageUpload } from "@/components/ui/image-upload";
-import { PAYMENT_METHODS, getPaymentMethodIcon, getPaymentMethodName } from "@/lib/payment-methods";
+import { getPaymentMethodIcon, getPaymentMethodName } from "@/lib/payment-methods";
 
 // ─── Types ───────────────────────────────────────────────────────────
 
-interface ToplistItem {
+export interface ToplistItem {
   id: string;
   brandId: string;
   brandName: string;
   brandLogo: string | null;
+  cta: string | null;
+  reviewUrl: string | null;
+  // SiteBrand data (read-only display)
   bonus: string | null;
   affiliateUrl: string | null;
-  reviewUrl: string | null;
   rating: number | null;
-  cta: string | null;
-  logoOverride: string | null;
-  termsOverride: string | null;
-  licenseOverride: string | null;
-  prosOverride: string[] | null;
-  consOverride: string[] | null;
-  paymentMethodsOverride: string[] | null;
+  terms: string | null;
+  description: string | null;
+  pros: string[] | null;
+  cons: string[] | null;
+  features: string[] | null;
+  badgeText: string | null;
+  badgeColor: string | null;
+  freeSpinsOffer: string | null;
+  wageringRequirement: string | null;
+  welcomePackage: string | null;
+  loyaltyProgram: string | null;
+  promotions: string | null;
 }
 
 interface Brand {
   brandId: string;
   name: string;
   defaultLogo: string | null;
-  defaultBonus: string | null;
-  defaultAffiliateUrl: string | null;
-  defaultRating: number | null;
-  terms: string | null;
   license: string | null;
-  pros: string[] | null;
-  cons: string[] | null;
-  features: string[] | null;
-  badgeText: string | null;
-  badgeColor: string | null;
   gameProviders: string[] | null;
   gameTypes: string[] | null;
   paymentMethods: string[] | null;
-  freeSpinsOffer: string | null;
-  wageringRequirement: string | null;
   totalGames: number | null;
 }
 
 interface ToplistTableBuilderProps {
+  siteKey: string;
   items: ToplistItem[];
   brands: Brand[];
   columns: string[];
-  columnLabels?: Record<string, string>; // Custom labels for columns
+  columnLabels?: Record<string, string>;
   onColumnsChange: (cols: string[]) => void;
   onColumnLabelChange?: (colKey: string, label: string) => void;
   onAddBrand: (brandId: string) => void;
   onRemoveBrand: (itemId: string) => void;
   onReorderItems: (items: ToplistItem[]) => void;
-  onUpdateItem: (id: string, field: string, value: string | number | string[] | null) => void;
+  onUpdateItem: (id: string, field: string, value: string | null) => void;
 }
 
 // ─── Column Registry ─────────────────────────────────────────────────
@@ -117,9 +112,9 @@ const COLUMN_REGISTRY: Record<string, ColumnDef> = {
   logo: {
     label: "Logo",
     render: (item) =>
-      item.logoOverride || item.brandLogo ? (
+      item.brandLogo ? (
         <img
-          src={item.logoOverride || item.brandLogo || ""}
+          src={item.brandLogo}
           alt={item.brandName}
           className="h-8 w-16 object-contain"
         />
@@ -129,21 +124,21 @@ const COLUMN_REGISTRY: Record<string, ColumnDef> = {
   },
   bonus: {
     label: "Bonus",
-    render: (item, brand) => (
-      <span>{item.bonus || brand?.defaultBonus || "—"}</span>
+    render: (item) => (
+      <span>{item.bonus || "—"}</span>
     ),
   },
   rating: {
     label: "Rating",
-    render: (item, brand) => {
-      const r = item.rating ?? brand?.defaultRating ?? null;
+    render: (item) => {
+      const r = item.rating;
       return <span>{r != null ? r.toFixed(1) : "—"}</span>;
     },
   },
   cta: {
     label: "CTA",
-    render: (item, brand) => {
-      const url = item.affiliateUrl || brand?.defaultAffiliateUrl;
+    render: (item) => {
+      const url = item.affiliateUrl;
       const text = item.cta || "Play Now";
 
       return url ? (
@@ -182,28 +177,28 @@ const COLUMN_REGISTRY: Record<string, ColumnDef> = {
   },
   terms: {
     label: "Terms",
-    render: (item, brand) => (
+    render: (item) => (
       <span className="max-w-[200px] truncate block text-xs">
-        {item.termsOverride || brand?.terms || "—"}
+        {item.terms || "—"}
       </span>
     ),
   },
   license: {
     label: "License",
-    render: (item, brand) => (
-      <span>{item.licenseOverride || brand?.license || "—"}</span>
+    render: (_item, brand) => (
+      <span>{brand?.license || "—"}</span>
     ),
   },
   freeSpins: {
     label: "Free Spins",
-    render: (_item, brand) => (
-      <span>{brand?.freeSpinsOffer || "—"}</span>
+    render: (item) => (
+      <span>{item.freeSpinsOffer || "—"}</span>
     ),
   },
   wagering: {
     label: "Wagering",
-    render: (_item, brand) => (
-      <span>{brand?.wageringRequirement || "—"}</span>
+    render: (item) => (
+      <span>{item.wageringRequirement || "—"}</span>
     ),
   },
   totalGames: {
@@ -214,8 +209,8 @@ const COLUMN_REGISTRY: Record<string, ColumnDef> = {
   },
   pros: {
     label: "Pros",
-    render: (item, brand) => {
-      const pros = item.prosOverride || brand?.pros;
+    render: (item) => {
+      const pros = item.pros as string[] | null;
       return pros && pros.length > 0 ? (
         <ul className="text-xs space-y-0.5">
           {pros.slice(0, 3).map((p, i) => (
@@ -229,8 +224,8 @@ const COLUMN_REGISTRY: Record<string, ColumnDef> = {
   },
   cons: {
     label: "Cons",
-    render: (item, brand) => {
-      const cons = item.consOverride || brand?.cons;
+    render: (item) => {
+      const cons = item.cons as string[] | null;
       return cons && cons.length > 0 ? (
         <ul className="text-xs space-y-0.5">
           {cons.slice(0, 3).map((c, i) => (
@@ -244,8 +239,8 @@ const COLUMN_REGISTRY: Record<string, ColumnDef> = {
   },
   features: {
     label: "Features",
-    render: (_item, brand) => {
-      const f = brand?.features;
+    render: (item) => {
+      const f = item.features as string[] | null;
       return f && f.length > 0 ? (
         <span className="text-xs">{f.join(", ")}</span>
       ) : (
@@ -255,8 +250,8 @@ const COLUMN_REGISTRY: Record<string, ColumnDef> = {
   },
   badgeText: {
     label: "Badge",
-    render: (_item, brand) => (
-      <span>{brand?.badgeText || "—"}</span>
+    render: (item) => (
+      <span>{item.badgeText || "—"}</span>
     ),
   },
   gameProviders: {
@@ -287,8 +282,8 @@ const COLUMN_REGISTRY: Record<string, ColumnDef> = {
   },
   paymentMethods: {
     label: "Payment Methods",
-    render: (item, brand) => {
-      const methods = item.paymentMethodsOverride || brand?.paymentMethods;
+    render: (_item, brand) => {
+      const methods = brand?.paymentMethods;
       return methods && methods.length > 0 ? (
         <div className="flex items-center gap-1 flex-wrap">
           {methods.slice(0, 5).map((methodId) => (
@@ -577,47 +572,37 @@ const DroppableTableHeader = memo(function DroppableTableHeader({ children }: { 
   );
 });
 
-// ─── Main Component ──────────────────────────────────────────────────
-
 // ─── Edit Modal Component ────────────────────────────────────────────
 
 function ItemEditModal({
   item,
-  brand,
+  siteKey,
   open,
   onOpenChange,
   onUpdate,
 }: {
   item: ToplistItem | null;
-  brand: Brand | undefined;
+  siteKey: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (field: string, value: string | number | string[] | null) => void;
+  onUpdate: (field: string, value: string | null) => void;
 }) {
   if (!item) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Edit {item.brandName}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 md:grid-cols-2 py-4">
+        <div className="grid gap-4 py-4">
           <div>
-            <Label className="text-xs">Bonus Override</Label>
+            <Label className="text-xs">CTA Text</Label>
             <Input
-              value={item.bonus || ""}
-              onChange={(e) => onUpdate("bonus", e.target.value || null)}
-              placeholder={brand?.defaultBonus || "e.g. 100% up to $500"}
-            />
-          </div>
-          <div>
-            <Label className="text-xs">Affiliate URL Override</Label>
-            <Input
-              value={item.affiliateUrl || ""}
-              onChange={(e) => onUpdate("affiliateUrl", e.target.value || null)}
-              placeholder="https://..."
+              value={item.cta || ""}
+              onChange={(e) => onUpdate("cta", e.target.value || null)}
+              placeholder="e.g. Play Now"
             />
           </div>
           <div>
@@ -628,122 +613,28 @@ function ItemEditModal({
               placeholder="/reviews/..."
             />
           </div>
-          <div>
-            <Label className="text-xs">Rating (0-10)</Label>
-            <Input
-              type="number"
-              min="0"
-              max="10"
-              step="0.1"
-              value={item.rating ?? ""}
-              onChange={(e) =>
-                onUpdate("rating", e.target.value ? parseFloat(e.target.value) : null)
-              }
-              placeholder={brand?.defaultRating?.toString() || "0.0"}
-            />
-          </div>
-          <div>
-            <Label className="text-xs">CTA Text</Label>
-            <Input
-              value={item.cta || ""}
-              onChange={(e) => onUpdate("cta", e.target.value || null)}
-              placeholder="e.g. Play Now"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <Label className="text-xs">Logo Override</Label>
-            <ImageUpload
-              value={item.logoOverride || ""}
-              onChange={(url) => onUpdate("logoOverride", url || null)}
-              type="toplist-item"
-              identifier={`${item.brandId}-${item.id}`}
-            />
-          </div>
-          <div>
-            <Label className="text-xs">Terms Override</Label>
-            <Input
-              value={item.termsOverride || ""}
-              onChange={(e) => onUpdate("termsOverride", e.target.value || null)}
-              placeholder={brand?.terms || "e.g. 18+ T&Cs apply"}
-            />
-          </div>
-          <div>
-            <Label className="text-xs">License Override</Label>
-            <Input
-              value={item.licenseOverride || ""}
-              onChange={(e) => onUpdate("licenseOverride", e.target.value || null)}
-              placeholder={brand?.license || "e.g. MGA, Curacao"}
-            />
-          </div>
-          <div className="md:col-span-2">
-            <Label className="text-xs">Pros Override (one per line)</Label>
-            <Textarea
-              value={item.prosOverride?.join("\n") || ""}
-              onChange={(e) => {
-                const lines = e.target.value
-                  .split("\n")
-                  .map((l) => l.trim())
-                  .filter((l) => l.length > 0);
-                onUpdate("prosOverride", lines.length > 0 ? lines : null);
-              }}
-              placeholder={brand?.pros?.join("\n") || "One pro per line"}
-              rows={3}
-            />
-          </div>
-          <div className="md:col-span-2">
-            <Label className="text-xs">Cons Override (one per line)</Label>
-            <Textarea
-              value={item.consOverride?.join("\n") || ""}
-              onChange={(e) => {
-                const lines = e.target.value
-                  .split("\n")
-                  .map((l) => l.trim())
-                  .filter((l) => l.length > 0);
-                onUpdate("consOverride", lines.length > 0 ? lines : null);
-              }}
-              placeholder={brand?.cons?.join("\n") || "One con per line"}
-              rows={3}
-            />
-          </div>
-          <div className="md:col-span-2">
-            <Label className="text-xs">Payment Methods Override</Label>
-            <div className="mt-2 p-3 border rounded-lg bg-zinc-50 max-h-48 overflow-y-auto">
-              <div className="grid grid-cols-2 gap-2">
-                {PAYMENT_METHODS.map((method) => {
-                  const selected = item.paymentMethodsOverride?.includes(method.id) || false;
-                  const brandHasIt = brand?.paymentMethods?.includes(method.id) || false;
 
-                  return (
-                    <button
-                      key={method.id}
-                      type="button"
-                      onClick={() => {
-                        const current = item.paymentMethodsOverride || [];
-                        const updated = selected
-                          ? current.filter((id) => id !== method.id)
-                          : [...current, method.id];
-                        onUpdate("paymentMethodsOverride", updated.length > 0 ? updated : null);
-                      }}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-all ${
-                        selected
-                          ? "bg-blue-500 text-white shadow-md"
-                          : brandHasIt
-                          ? "bg-blue-100 text-blue-900 border border-blue-300"
-                          : "bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-100"
-                      }`}
-                    >
-                      <span className="shrink-0">{method.icon}</span>
-                      <span className="truncate">{method.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="text-xs text-zinc-500 mt-3 italic">
-                {brand?.paymentMethods && brand.paymentMethods.length > 0
-                  ? `Brand default: ${brand.paymentMethods.map(id => getPaymentMethodName(id)).join(", ")}`
-                  : "No brand defaults"}
-              </p>
-            </div>
+          {/* Read-only SiteBrand info */}
+          <div className="border-t pt-4 mt-2">
+            <p className="text-xs text-zinc-500 mb-3">
+              Deal data is managed per-site.{" "}
+              <a
+                href={`/dashboard/sites/${siteKey}/brands/${item.brandId}`}
+                className="text-blue-600 hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Edit deal for this site
+              </a>
+            </p>
+            {item.bonus && (
+              <p className="text-xs text-zinc-600"><strong>Bonus:</strong> {item.bonus}</p>
+            )}
+            {item.rating != null && (
+              <p className="text-xs text-zinc-600"><strong>Rating:</strong> {item.rating.toFixed(1)}</p>
+            )}
+            {item.affiliateUrl && (
+              <p className="text-xs text-zinc-600 truncate"><strong>Affiliate:</strong> {item.affiliateUrl}</p>
+            )}
           </div>
         </div>
 
@@ -758,6 +649,7 @@ function ItemEditModal({
 // ─── Main Component ──────────────────────────────────────────────────
 
 export function ToplistTableBuilder({
+  siteKey,
   items,
   brands,
   columns,
@@ -1043,7 +935,7 @@ export function ToplistTableBuilder({
       {/* Edit modal */}
       <ItemEditModal
         item={editingItem}
-        brand={editingItem ? brandMap.get(editingItem.brandId) : undefined}
+        siteKey={siteKey}
         open={!!editingItem}
         onOpenChange={(open) => !open && setEditingItemId(null)}
         onUpdate={(field, value) => {

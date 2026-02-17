@@ -12,38 +12,34 @@ interface ToplistItem {
   brandId: string;
   brandName: string;
   brandLogo: string | null;
+  cta: string | null;
+  reviewUrl: string | null;
+  // SiteBrand data (read-only display)
   bonus: string | null;
   affiliateUrl: string | null;
-  reviewUrl: string | null;
   rating: number | null;
-  cta: string | null;
-  logoOverride: string | null;
-  termsOverride: string | null;
-  licenseOverride: string | null;
-  prosOverride: string[] | null;
-  consOverride: string[] | null;
-  paymentMethodsOverride: string[] | null;
+  terms: string | null;
+  description: string | null;
+  pros: string[] | null;
+  cons: string[] | null;
+  features: string[] | null;
+  badgeText: string | null;
+  badgeColor: string | null;
+  freeSpinsOffer: string | null;
+  wageringRequirement: string | null;
+  welcomePackage: string | null;
+  loyaltyProgram: string | null;
+  promotions: string | null;
 }
 
 interface Brand {
   brandId: string;
   name: string;
   defaultLogo: string | null;
-  defaultBonus: string | null;
-  defaultAffiliateUrl: string | null;
-  defaultRating: number | null;
-  terms: string | null;
   license: string | null;
-  pros: string[] | null;
-  cons: string[] | null;
-  features: string[] | null;
-  badgeText: string | null;
-  badgeColor: string | null;
   gameProviders: string[] | null;
   gameTypes: string[] | null;
   paymentMethods: string[] | null;
-  freeSpinsOffer: string | null;
-  wageringRequirement: string | null;
   totalGames: number | null;
 }
 
@@ -90,23 +86,30 @@ export default function ToplistEditorPage() {
         if (data.columnLabels && typeof data.columnLabels === "object") {
           setColumnLabels(data.columnLabels);
         }
-        // Transform items with raw override values
+        // Transform items — SiteBrand deal data comes from API as read-only
         const itemsWithBrands = data.items.map((item: any, index: number) => ({
           id: `item-${index}`,
           brandId: item.brandId,
           brandName: item.brandName,
           brandLogo: item.brandLogo,
+          cta: item.cta,
+          reviewUrl: item.reviewUrl,
+          // SiteBrand data (read-only)
           bonus: item.bonus,
           affiliateUrl: item.affiliateUrl,
-          reviewUrl: item.reviewUrl,
           rating: item.rating,
-          cta: item.cta,
-          logoOverride: item.logoOverride,
-          termsOverride: item.termsOverride,
-          licenseOverride: item.licenseOverride,
-          prosOverride: item.prosOverride,
-          consOverride: item.consOverride,
-          paymentMethodsOverride: item.paymentMethodsOverride,
+          terms: item.terms,
+          description: item.description,
+          pros: item.pros,
+          cons: item.cons,
+          features: item.features,
+          badgeText: item.badgeText,
+          badgeColor: item.badgeColor,
+          freeSpinsOffer: item.freeSpinsOffer,
+          wageringRequirement: item.wageringRequirement,
+          welcomePackage: item.welcomePackage,
+          loyaltyProgram: item.loyaltyProgram,
+          promotions: item.promotions,
         }));
         setItems(itemsWithBrands);
       }
@@ -153,17 +156,24 @@ export default function ToplistEditorPage() {
       brandId: brand.brandId,
       brandName: brand.name,
       brandLogo: brand.defaultLogo,
+      cta: null,
+      reviewUrl: null,
+      // SiteBrand data will be null for newly added brands
       bonus: null,
       affiliateUrl: null,
-      reviewUrl: null,
       rating: null,
-      cta: null,
-      logoOverride: null,
-      termsOverride: null,
-      licenseOverride: null,
-      prosOverride: null,
-      consOverride: null,
-      paymentMethodsOverride: null,
+      terms: null,
+      description: null,
+      pros: null,
+      cons: null,
+      features: null,
+      badgeText: null,
+      badgeColor: null,
+      freeSpinsOffer: null,
+      wageringRequirement: null,
+      welcomePackage: null,
+      loyaltyProgram: null,
+      promotions: null,
     };
 
     setItems([...items, newItem]);
@@ -185,7 +195,7 @@ export default function ToplistEditorPage() {
     setHasChanges(true);
   }
 
-  function handleUpdateItem(id: string, field: string, value: string | number | string[] | null) {
+  function handleUpdateItem(id: string, field: string, value: string | null) {
     setItems((items) =>
       items.map((item) =>
         item.id === id ? { ...item, [field]: value } : item
@@ -210,17 +220,8 @@ export default function ToplistEditorPage() {
           body: JSON.stringify({
             items: items.map((item) => ({
               brandId: item.brandId,
-              bonus: item.bonus,
-              affiliateUrl: item.affiliateUrl,
-              reviewUrl: item.reviewUrl,
-              rating: item.rating,
               cta: item.cta,
-              logoOverride: item.logoOverride,
-              termsOverride: item.termsOverride,
-              licenseOverride: item.licenseOverride,
-              prosOverride: item.prosOverride,
-              consOverride: item.consOverride,
-              paymentMethodsOverride: item.paymentMethodsOverride,
+              reviewUrl: item.reviewUrl,
             })),
           }),
         }),
@@ -269,6 +270,7 @@ export default function ToplistEditorPage() {
       </div>
 
       <ToplistTableBuilder
+        siteKey={siteKey}
         items={items}
         brands={brands}
         columns={columns}

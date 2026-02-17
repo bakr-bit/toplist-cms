@@ -3,10 +3,8 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { ToggleGrid, ToggleOption } from "@/components/ui/toggle-grid";
-import { TagInput } from "@/components/ui/tag-input";
 import { BrandFormState } from "@/lib/use-brand-form";
 import { PAYMENT_METHODS } from "@/lib/payment-methods";
 import { GAME_TYPES } from "@/lib/game-types";
@@ -47,12 +45,10 @@ const languageOptions: ToggleOption[] = LANGUAGES.map((l) => ({
 }));
 
 const TABS = [
-  "Bonuses & Promotions",
   "Payment",
   "Games",
   "Geo & Languages",
-  "Display & Card",
-  "Other",
+  "Support & Other",
 ] as const;
 
 type Tab = (typeof TABS)[number];
@@ -67,7 +63,7 @@ interface BrandEditorProps {
 }
 
 export function BrandEditor({ brandId, state, updateField }: BrandEditorProps) {
-  const [activeTab, setActiveTab] = useState<Tab>("Bonuses & Promotions");
+  const [activeTab, setActiveTab] = useState<Tab>("Payment");
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 [&_input]:bg-white [&_textarea]:bg-white [&_select]:bg-white">
@@ -111,20 +107,6 @@ export function BrandEditor({ brandId, state, updateField }: BrandEditorProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="defaultRating">Rating (0-10)</Label>
-          <Input
-            id="defaultRating"
-            type="number"
-            min="0"
-            max="10"
-            step="0.1"
-            value={state.defaultRating}
-            onChange={(e) => updateField("defaultRating", e.target.value)}
-            placeholder="e.g. 8.5"
-          />
-        </div>
-
-        <div className="space-y-2">
           <Label htmlFor="yearEstablished">Year Established</Label>
           <Input
             id="yearEstablished"
@@ -145,6 +127,61 @@ export function BrandEditor({ brandId, state, updateField }: BrandEditorProps) {
             onChange={(e) => updateField("ownerOperator", e.target.value)}
             placeholder="e.g. Dama N.V."
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="sportsBetting">Sports Betting</Label>
+            <select
+              id="sportsBetting"
+              value={state.sportsBetting}
+              onChange={(e) => updateField("sportsBetting", e.target.value)}
+              className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="">Not specified</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="cryptoCasino">Crypto</Label>
+            <select
+              id="cryptoCasino"
+              value={state.cryptoCasino}
+              onChange={(e) => updateField("cryptoCasino", e.target.value)}
+              className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="">Not specified</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="vpnAllowed">VPN Allowed</Label>
+            <select
+              id="vpnAllowed"
+              value={state.vpnAllowed}
+              onChange={(e) => updateField("vpnAllowed", e.target.value)}
+              className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="">Not specified</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="kycRequired">KYC Required</Label>
+            <select
+              id="kycRequired"
+              value={state.kycRequired}
+              onChange={(e) => updateField("kycRequired", e.target.value)}
+              className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="">Not specified</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -168,9 +205,6 @@ export function BrandEditor({ brandId, state, updateField }: BrandEditorProps) {
         </div>
 
         <div className="space-y-5">
-          {activeTab === "Bonuses & Promotions" && (
-            <BonusesTab state={state} updateField={updateField} />
-          )}
           {activeTab === "Payment" && (
             <FinancialTab state={state} updateField={updateField} />
           )}
@@ -180,10 +214,7 @@ export function BrandEditor({ brandId, state, updateField }: BrandEditorProps) {
           {activeTab === "Geo & Languages" && (
             <GeoTab state={state} updateField={updateField} />
           )}
-          {activeTab === "Display & Card" && (
-            <DisplayTab state={state} updateField={updateField} />
-          )}
-          {activeTab === "Other" && (
+          {activeTab === "Support & Other" && (
             <OtherTab state={state} updateField={updateField} />
           )}
         </div>
@@ -200,149 +231,6 @@ interface TabProps {
     field: K,
     value: BrandFormState[K]
   ) => void;
-}
-
-function BonusesTab({ state, updateField }: TabProps) {
-  return (
-    <>
-      <div className="space-y-2">
-        <Label htmlFor="defaultBonus">Default Bonus</Label>
-        <Input
-          id="defaultBonus"
-          value={state.defaultBonus}
-          onChange={(e) => updateField("defaultBonus", e.target.value)}
-          placeholder="e.g. 100% up to $500"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="welcomePackage">Welcome Package</Label>
-        <Input
-          id="welcomePackage"
-          value={state.welcomePackage}
-          onChange={(e) => updateField("welcomePackage", e.target.value)}
-          placeholder="e.g. 100% up to €500 + 200 Free Spins"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="noDepositBonus">No Deposit Bonus</Label>
-        <Input
-          id="noDepositBonus"
-          value={state.noDepositBonus}
-          onChange={(e) => updateField("noDepositBonus", e.target.value)}
-          placeholder="e.g. 20 Free Spins on registration"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="freeSpinsOffer">Free Spins Offer</Label>
-        <Input
-          id="freeSpinsOffer"
-          value={state.freeSpinsOffer}
-          onChange={(e) => updateField("freeSpinsOffer", e.target.value)}
-          placeholder="e.g. 200 Free Spins on Book of Dead"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="wageringRequirement">Wagering Requirement</Label>
-        <Input
-          id="wageringRequirement"
-          value={state.wageringRequirement}
-          onChange={(e) => updateField("wageringRequirement", e.target.value)}
-          placeholder="e.g. 35x"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="terms">Terms & Conditions</Label>
-        <Input
-          id="terms"
-          value={state.terms}
-          onChange={(e) => updateField("terms", e.target.value)}
-          placeholder="e.g. 18+ T&Cs apply"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="loyaltyProgram">Loyalty Program</Label>
-        <Input
-          id="loyaltyProgram"
-          value={state.loyaltyProgram}
-          onChange={(e) => updateField("loyaltyProgram", e.target.value)}
-          placeholder="e.g. VIP Club with 5 tiers"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="promotions">Promotions</Label>
-        <Input
-          id="promotions"
-          value={state.promotions}
-          onChange={(e) => updateField("promotions", e.target.value)}
-          placeholder="e.g. Weekly cashback, tournaments"
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="sportsBetting">Sports Betting</Label>
-          <select
-            id="sportsBetting"
-            value={state.sportsBetting}
-            onChange={(e) => updateField("sportsBetting", e.target.value)}
-            className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <option value="">Not specified</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="cryptoCasino">Crypto</Label>
-          <select
-            id="cryptoCasino"
-            value={state.cryptoCasino}
-            onChange={(e) => updateField("cryptoCasino", e.target.value)}
-            className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <option value="">Not specified</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="vpnAllowed">VPN Allowed</Label>
-          <select
-            id="vpnAllowed"
-            value={state.vpnAllowed}
-            onChange={(e) => updateField("vpnAllowed", e.target.value)}
-            className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <option value="">Not specified</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="kycRequired">KYC Required</Label>
-          <select
-            id="kycRequired"
-            value={state.kycRequired}
-            onChange={(e) => updateField("kycRequired", e.target.value)}
-            className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <option value="">Not specified</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="defaultAffiliateUrl">Default Affiliate URL</Label>
-        <Input
-          id="defaultAffiliateUrl"
-          type="url"
-          value={state.defaultAffiliateUrl}
-          onChange={(e) => updateField("defaultAffiliateUrl", e.target.value)}
-          placeholder="https://..."
-        />
-      </div>
-    </>
-  );
 }
 
 function FinancialTab({ state, updateField }: TabProps) {
@@ -510,68 +398,6 @@ function GeoTab({ state, updateField }: TabProps) {
           searchable
           columns={4}
           allowCustom
-        />
-      </div>
-    </>
-  );
-}
-
-function DisplayTab({ state, updateField }: TabProps) {
-  return (
-    <>
-      <div className="space-y-2">
-        <Label>Pros</Label>
-        <TagInput
-          value={state.pros}
-          onChange={(v) => updateField("pros", v)}
-          placeholder="Add a pro and press Enter..."
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>Cons</Label>
-        <TagInput
-          value={state.cons}
-          onChange={(v) => updateField("cons", v)}
-          placeholder="Add a con and press Enter..."
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>Features (max 3)</Label>
-        <TagInput
-          value={state.features}
-          onChange={(v) => updateField("features", v)}
-          maxItems={3}
-          placeholder="Add a feature and press Enter..."
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="badgeText">Badge Text</Label>
-          <Input
-            id="badgeText"
-            value={state.badgeText}
-            onChange={(e) => updateField("badgeText", e.target.value)}
-            placeholder="e.g. €20 Minimum deposit"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="badgeColor">Badge Color</Label>
-          <Input
-            id="badgeColor"
-            value={state.badgeColor}
-            onChange={(e) => updateField("badgeColor", e.target.value)}
-            placeholder="e.g. Blue, Green"
-          />
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          value={state.description}
-          onChange={(e) => updateField("description", e.target.value)}
-          placeholder="Brand description..."
-          rows={4}
         />
       </div>
     </>

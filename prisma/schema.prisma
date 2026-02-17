@@ -11,14 +11,7 @@ model Brand {
   name                String
   defaultLogo         String?
   website             String?
-  defaultBonus        String?
-  defaultAffiliateUrl String?
-  defaultRating       Decimal? @db.Decimal(3, 1)
-  terms               String?
   license             String?
-  description         String?
-  pros                Json?
-  cons                Json?
   // Extended fields
   yearEstablished     Int?
   ownerOperator       String?
@@ -31,16 +24,10 @@ model Brand {
   minDeposit          String?
   minWithdrawal       String?
   maxWithdrawal       String?
-  welcomePackage      String?
   sportsBetting       Boolean?
   cryptoCasino        Boolean?
   vpnAllowed          Boolean?
   kycRequired         Boolean?
-  noDepositBonus      String?
-  freeSpinsOffer      String?
-  wageringRequirement String?
-  loyaltyProgram      String?
-  promotions          String?
   gameProviders       Json?
   totalGames          Int?
   gameTypes           Json?
@@ -51,13 +38,11 @@ model Brand {
   mobileCompatibility String?
   registrationProcess String?
   kycProcess          String?
-  features            Json?
-  badgeText           String?
-  badgeColor          String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
   toplistItems ToplistItem[]
+  siteBrands   SiteBrand[]
 }
 
 model Site {
@@ -67,7 +52,8 @@ model Site {
   serps     Json?
   createdAt DateTime @default(now())
 
-  toplists Toplist[]
+  toplists   Toplist[]
+  siteBrands SiteBrand[]
 }
 
 model Toplist {
@@ -89,27 +75,51 @@ model Toplist {
 }
 
 model ToplistItem {
-  id                    String   @id @default(uuid())
-  toplistId             String
-  brandId               String
-  position              Int
-  bonus                 String?
-  affiliateUrl          String?
-  reviewUrl             String?
-  rating                Decimal? @db.Decimal(3, 1)
-  cta                   String?
-  logoOverride          String?
-  termsOverride         String?
-  licenseOverride       String?
-  prosOverride          Json?
-  consOverride          Json?
-  paymentMethodsOverride Json?
+  id        String   @id @default(uuid())
+  toplistId String
+  brandId   String
+  position  Int
+  cta       String?
+  reviewUrl String?
 
   toplist Toplist @relation(fields: [toplistId], references: [id], onDelete: Cascade)
   brand   Brand   @relation(fields: [brandId], references: [brandId])
 
   @@unique([toplistId, position])
   @@index([toplistId])
+  @@index([brandId])
+}
+
+model SiteBrand {
+  siteKey   String
+  brandId   String
+
+  logo              String?
+  bonus             String?
+  affiliateUrl      String?
+  rating            Decimal?  @db.Decimal(3, 1)
+  terms             String?
+  description       String?
+  pros              Json?
+  cons              Json?
+  welcomePackage    String?
+  noDepositBonus    String?
+  freeSpinsOffer    String?
+  wageringRequirement String?
+  loyaltyProgram    String?
+  promotions        String?
+  features          Json?
+  badgeText         String?
+  badgeColor        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  site  Site  @relation(fields: [siteKey], references: [siteKey], onDelete: Cascade)
+  brand Brand @relation(fields: [brandId], references: [brandId])
+
+  @@id([siteKey, brandId])
+  @@index([siteKey])
   @@index([brandId])
 }
 

@@ -20,7 +20,6 @@ interface Brand {
   name: string;
   defaultLogo: string | null;
   website: string | null;
-  defaultRating: number | null;
   usageCount: number;
 }
 

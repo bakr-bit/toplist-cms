@@ -50,59 +50,69 @@ export async function GET(
       );
     }
 
-    // Transform items to match expected client format
-    // Override fields take precedence over brand defaults
-    const items = toplist.items.map((item) => ({
-      brandId: item.brandId,
-      name: item.brand.name,
-      logo: item.logoOverride || item.brand.defaultLogo,
-      affiliateUrl: item.affiliateUrl || item.brand.defaultAffiliateUrl,
-      reviewUrl: item.reviewUrl,
-      bonus: item.bonus || item.brand.defaultBonus,
-      rating: item.rating
-        ? Number(item.rating)
-        : item.brand.defaultRating
-          ? Number(item.brand.defaultRating)
-          : null,
-      cta: item.cta,
-      terms: item.termsOverride || item.brand.terms,
-      license: item.licenseOverride || item.brand.license,
-      description: item.brand.description,
-      pros: item.prosOverride || item.brand.pros,
-      cons: item.consOverride || item.brand.cons,
-      website: item.brand.website,
-      yearEstablished: item.brand.yearEstablished,
-      ownerOperator: item.brand.ownerOperator,
-      languages: item.brand.languages,
-      availableCountries: item.brand.availableCountries,
-      restrictedCountries: item.brand.restrictedCountries,
-      currencies: item.brand.currencies,
-      paymentMethods: item.brand.paymentMethods,
-      withdrawalTime: item.brand.withdrawalTime,
-      minDeposit: item.brand.minDeposit,
-      minWithdrawal: item.brand.minWithdrawal,
-      maxWithdrawal: item.brand.maxWithdrawal,
-      welcomePackage: item.brand.welcomePackage,
-      sportsBetting: item.brand.sportsBetting,
-      noDepositBonus: item.brand.noDepositBonus,
-      freeSpinsOffer: item.brand.freeSpinsOffer,
-      wageringRequirement: item.brand.wageringRequirement,
-      loyaltyProgram: item.brand.loyaltyProgram,
-      promotions: item.brand.promotions,
-      gameProviders: item.brand.gameProviders,
-      totalGames: item.brand.totalGames,
-      gameTypes: item.brand.gameTypes,
-      exclusiveGames: item.brand.exclusiveGames,
-      supportContacts: item.brand.supportContacts,
-      supportHours: item.brand.supportHours,
-      supportLanguages: item.brand.supportLanguages,
-      mobileCompatibility: item.brand.mobileCompatibility,
-      registrationProcess: item.brand.registrationProcess,
-      kycProcess: item.brand.kycProcess,
-      features: item.brand.features,
-      badgeText: item.brand.badgeText,
-      badgeColor: item.brand.badgeColor,
-    }));
+    // Fetch SiteBrands for all brands in this toplist
+    const brandIds = toplist.items.map((item) => item.brandId);
+    const siteBrands = await prisma.siteBrand.findMany({
+      where: {
+        siteKey: toplist.siteKey,
+        brandId: { in: brandIds },
+      },
+    });
+    const siteBrandMap = new Map(
+      siteBrands.map((sb) => [sb.brandId, sb])
+    );
+
+    // Transform items: SiteBrand for deal/editorial, Brand for global fields
+    const items = toplist.items.map((item) => {
+      const sb = siteBrandMap.get(item.brandId);
+      return {
+        brandId: item.brandId,
+        name: item.brand.name,
+        logo: sb?.logo || item.brand.defaultLogo,
+        affiliateUrl: sb?.affiliateUrl || null,
+        reviewUrl: item.reviewUrl,
+        bonus: sb?.bonus || null,
+        rating: sb?.rating ? Number(sb.rating) : null,
+        cta: item.cta,
+        terms: sb?.terms || null,
+        license: item.brand.license,
+        description: sb?.description || null,
+        pros: sb?.pros || null,
+        cons: sb?.cons || null,
+        website: item.brand.website,
+        yearEstablished: item.brand.yearEstablished,
+        ownerOperator: item.brand.ownerOperator,
+        languages: item.brand.languages,
+        availableCountries: item.brand.availableCountries,
+        restrictedCountries: item.brand.restrictedCountries,
+        currencies: item.brand.currencies,
+        paymentMethods: item.brand.paymentMethods,
+        withdrawalTime: item.brand.withdrawalTime,
+        minDeposit: item.brand.minDeposit,
+        minWithdrawal: item.brand.minWithdrawal,
+        maxWithdrawal: item.brand.maxWithdrawal,
+        welcomePackage: sb?.welcomePackage || null,
+        sportsBetting: item.brand.sportsBetting,
+        noDepositBonus: sb?.noDepositBonus || null,
+        freeSpinsOffer: sb?.freeSpinsOffer || null,
+        wageringRequirement: sb?.wageringRequirement || null,
+        loyaltyProgram: sb?.loyaltyProgram || null,
+        promotions: sb?.promotions || null,
+        gameProviders: item.brand.gameProviders,
+        totalGames: item.brand.totalGames,
+        gameTypes: item.brand.gameTypes,
+        exclusiveGames: item.brand.exclusiveGames,
+        supportContacts: item.brand.supportContacts,
+        supportHours: item.brand.supportHours,
+        supportLanguages: item.brand.supportLanguages,
+        mobileCompatibility: item.brand.mobileCompatibility,
+        registrationProcess: item.brand.registrationProcess,
+        kycProcess: item.brand.kycProcess,
+        features: sb?.features || null,
+        badgeText: sb?.badgeText || null,
+        badgeColor: sb?.badgeColor || null,
+      };
+    });
 
     return NextResponse.json(
       {

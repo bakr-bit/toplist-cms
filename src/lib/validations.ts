@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// Shared brand extended fields (used by both create and update schemas)
+// Shared brand extended fields (global facts only — no deal/editorial fields)
 const brandExtendedFields = {
   yearEstablished: z.number().int().min(1900).max(2100).optional().nullable(),
   ownerOperator: z.string().max(200).optional().nullable(),
@@ -13,16 +13,10 @@ const brandExtendedFields = {
   minDeposit: z.string().max(100).optional().nullable(),
   minWithdrawal: z.string().max(100).optional().nullable(),
   maxWithdrawal: z.string().max(200).optional().nullable(),
-  welcomePackage: z.string().max(500).optional().nullable(),
   sportsBetting: z.boolean().optional().nullable(),
   cryptoCasino: z.boolean().optional().nullable(),
   vpnAllowed: z.boolean().optional().nullable(),
   kycRequired: z.boolean().optional().nullable(),
-  noDepositBonus: z.string().max(500).optional().nullable(),
-  freeSpinsOffer: z.string().max(500).optional().nullable(),
-  wageringRequirement: z.string().max(200).optional().nullable(),
-  loyaltyProgram: z.string().max(500).optional().nullable(),
-  promotions: z.string().max(500).optional().nullable(),
   gameProviders: z.array(z.string()).optional().nullable(),
   totalGames: z.number().int().min(0).optional().nullable(),
   gameTypes: z.array(z.string()).optional().nullable(),
@@ -33,12 +27,9 @@ const brandExtendedFields = {
   mobileCompatibility: z.string().max(200).optional().nullable(),
   registrationProcess: z.string().max(500).optional().nullable(),
   kycProcess: z.string().max(500).optional().nullable(),
-  features: z.array(z.string()).max(3).optional().nullable(),
-  badgeText: z.string().max(200).optional().nullable(),
-  badgeColor: z.string().max(50).optional().nullable(),
 };
 
-// Brand schemas
+// Brand schemas (global facts only)
 export const createBrandSchema = z.object({
   brandId: z
     .string()
@@ -48,14 +39,7 @@ export const createBrandSchema = z.object({
   name: z.string().min(1).max(200),
   defaultLogo: z.string().url().optional().nullable(),
   website: z.string().url().optional().nullable(),
-  defaultBonus: z.string().max(500).optional().nullable(),
-  defaultAffiliateUrl: z.string().url().optional().nullable(),
-  defaultRating: z.number().min(0).max(10).optional().nullable(),
-  terms: z.string().max(500).optional().nullable(),
   license: z.string().max(100).optional().nullable(),
-  description: z.string().optional().nullable(),
-  pros: z.array(z.string()).optional().nullable(),
-  cons: z.array(z.string()).optional().nullable(),
   ...brandExtendedFields,
 });
 
@@ -63,15 +47,50 @@ export const updateBrandSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   defaultLogo: z.string().url().optional().nullable(),
   website: z.string().url().optional().nullable(),
-  defaultBonus: z.string().max(500).optional().nullable(),
-  defaultAffiliateUrl: z.string().url().optional().nullable(),
-  defaultRating: z.number().min(0).max(10).optional().nullable(),
-  terms: z.string().max(500).optional().nullable(),
   license: z.string().max(100).optional().nullable(),
+  ...brandExtendedFields,
+});
+
+// SiteBrand schemas (deal/editorial per site)
+export const createSiteBrandSchema = z.object({
+  brandId: z.string().min(1),
+  logo: z.string().url().optional().nullable(),
+  bonus: z.string().max(500).optional().nullable(),
+  affiliateUrl: z.string().url().optional().nullable(),
+  rating: z.number().min(0).max(10).optional().nullable(),
+  terms: z.string().max(500).optional().nullable(),
   description: z.string().optional().nullable(),
   pros: z.array(z.string()).optional().nullable(),
   cons: z.array(z.string()).optional().nullable(),
-  ...brandExtendedFields,
+  welcomePackage: z.string().max(500).optional().nullable(),
+  noDepositBonus: z.string().max(500).optional().nullable(),
+  freeSpinsOffer: z.string().max(500).optional().nullable(),
+  wageringRequirement: z.string().max(200).optional().nullable(),
+  loyaltyProgram: z.string().max(500).optional().nullable(),
+  promotions: z.string().max(500).optional().nullable(),
+  features: z.array(z.string()).max(3).optional().nullable(),
+  badgeText: z.string().max(200).optional().nullable(),
+  badgeColor: z.string().max(50).optional().nullable(),
+});
+
+export const updateSiteBrandSchema = z.object({
+  logo: z.string().url().optional().nullable(),
+  bonus: z.string().max(500).optional().nullable(),
+  affiliateUrl: z.string().url().optional().nullable(),
+  rating: z.number().min(0).max(10).optional().nullable(),
+  terms: z.string().max(500).optional().nullable(),
+  description: z.string().optional().nullable(),
+  pros: z.array(z.string()).optional().nullable(),
+  cons: z.array(z.string()).optional().nullable(),
+  welcomePackage: z.string().max(500).optional().nullable(),
+  noDepositBonus: z.string().max(500).optional().nullable(),
+  freeSpinsOffer: z.string().max(500).optional().nullable(),
+  wageringRequirement: z.string().max(200).optional().nullable(),
+  loyaltyProgram: z.string().max(500).optional().nullable(),
+  promotions: z.string().max(500).optional().nullable(),
+  features: z.array(z.string()).max(3).optional().nullable(),
+  badgeText: z.string().max(200).optional().nullable(),
+  badgeColor: z.string().max(50).optional().nullable(),
 });
 
 // SERP schema (keyword + geo pair)
@@ -112,20 +131,11 @@ export const updateToplistSchema = z.object({
   columnLabels: z.record(z.string().max(50), z.string().max(100)).optional().nullable(),
 });
 
-// Toplist items schema
+// Toplist items schema (simplified — no more overrides)
 export const toplistItemSchema = z.object({
   brandId: z.string().min(1),
-  bonus: z.string().max(500).optional().nullable(),
-  affiliateUrl: z.string().url().optional().nullable(),
-  reviewUrl: z.string().max(500).optional().nullable(),
-  rating: z.number().min(0).max(10).optional().nullable(),
   cta: z.string().max(100).optional().nullable(),
-  logoOverride: z.string().url().optional().nullable(),
-  termsOverride: z.string().max(500).optional().nullable(),
-  licenseOverride: z.string().max(100).optional().nullable(),
-  prosOverride: z.array(z.string()).optional().nullable(),
-  consOverride: z.array(z.string()).optional().nullable(),
-  paymentMethodsOverride: z.array(z.string()).optional().nullable(),
+  reviewUrl: z.string().max(500).optional().nullable(),
 });
 
 export const updateToplistItemsSchema = z.object({
@@ -141,6 +151,8 @@ export function domainToSiteKey(domain: string): string {
 export type Serp = z.infer<typeof serpSchema>;
 export type CreateBrandInput = z.infer<typeof createBrandSchema>;
 export type UpdateBrandInput = z.infer<typeof updateBrandSchema>;
+export type CreateSiteBrandInput = z.infer<typeof createSiteBrandSchema>;
+export type UpdateSiteBrandInput = z.infer<typeof updateSiteBrandSchema>;
 export type CreateSiteInput = z.infer<typeof createSiteSchema>;
 export type UpdateSiteInput = z.infer<typeof updateSiteSchema>;
 export type CreateToplistInput = z.infer<typeof createToplistSchema>;

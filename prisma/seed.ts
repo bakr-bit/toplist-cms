@@ -87,8 +87,6 @@ async function main() {
         toplistId: toplist.id,
         brandId: brand.brandId,
         position: 0,
-        bonus: "100% up to $500",
-        rating: 8.5,
         cta: "Play Now",
       },
     });

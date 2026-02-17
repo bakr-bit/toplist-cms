@@ -133,6 +133,9 @@ export default function SiteDetailPage() {
           )}
         </div>
         <div className="flex gap-2">
+          <Link href={`/dashboard/sites/${siteKey}/brands`}>
+            <Button variant="outline">Brands</Button>
+          </Link>
           <Button
             variant="outline"
             onClick={() => setImportDialogOpen(true)}

@@ -7,27 +7,10 @@ export interface BrandFormState {
   name: string;
   defaultLogo: string;
   website: string;
-  defaultRating: string;
   yearEstablished: string;
   ownerOperator: string;
-  description: string;
 
-  // Bonuses & Promotions
-  defaultBonus: string;
-  defaultAffiliateUrl: string;
-  welcomePackage: string;
-  noDepositBonus: string;
-  freeSpinsOffer: string;
-  wageringRequirement: string;
-  terms: string;
-  loyaltyProgram: string;
-  promotions: string;
-  sportsBetting: string;
-  cryptoCasino: string;
-  vpnAllowed: string;
-  kycRequired: string;
-
-  // Financial
+  // Payment
   currencies: string[];
   paymentMethods: string[];
   minDeposit: string;
@@ -47,12 +30,11 @@ export interface BrandFormState {
   restrictedCountries: string[];
   supportLanguages: string[];
 
-  // Display & Card
-  pros: string[];
-  cons: string[];
-  features: string[];
-  badgeText: string;
-  badgeColor: string;
+  // Booleans
+  sportsBetting: string;
+  cryptoCasino: string;
+  vpnAllowed: string;
+  kycRequired: string;
 
   // Other
   supportContacts: string;
@@ -67,23 +49,8 @@ const INITIAL_STATE: BrandFormState = {
   name: "",
   defaultLogo: "",
   website: "",
-  defaultRating: "",
   yearEstablished: "",
   ownerOperator: "",
-  description: "",
-  defaultBonus: "",
-  defaultAffiliateUrl: "",
-  welcomePackage: "",
-  noDepositBonus: "",
-  freeSpinsOffer: "",
-  wageringRequirement: "",
-  terms: "",
-  loyaltyProgram: "",
-  promotions: "",
-  sportsBetting: "",
-  cryptoCasino: "",
-  vpnAllowed: "",
-  kycRequired: "",
   currencies: [],
   paymentMethods: [],
   minDeposit: "",
@@ -98,11 +65,10 @@ const INITIAL_STATE: BrandFormState = {
   availableCountries: [],
   restrictedCountries: [],
   supportLanguages: [],
-  pros: [],
-  cons: [],
-  features: [],
-  badgeText: "",
-  badgeColor: "",
+  sportsBetting: "",
+  cryptoCasino: "",
+  vpnAllowed: "",
+  kycRequired: "",
   supportContacts: "",
   supportHours: "",
   license: "",
@@ -125,14 +91,7 @@ export interface BrandApiData {
   name: string;
   defaultLogo: string | null;
   website: string | null;
-  defaultBonus: string | null;
-  defaultAffiliateUrl: string | null;
-  defaultRating: number | null;
-  terms: string | null;
   license: string | null;
-  description: string | null;
-  pros: string[] | null;
-  cons: string[] | null;
   yearEstablished: number | null;
   ownerOperator: string | null;
   languages: string[] | null;
@@ -144,16 +103,10 @@ export interface BrandApiData {
   minDeposit: string | null;
   minWithdrawal: string | null;
   maxWithdrawal: string | null;
-  welcomePackage: string | null;
   sportsBetting: boolean | null;
   cryptoCasino: boolean | null;
   vpnAllowed: boolean | null;
   kycRequired: boolean | null;
-  noDepositBonus: string | null;
-  freeSpinsOffer: string | null;
-  wageringRequirement: string | null;
-  loyaltyProgram: string | null;
-  promotions: string | null;
   gameProviders: string[] | null;
   totalGames: number | null;
   gameTypes: string[] | null;
@@ -164,9 +117,6 @@ export interface BrandApiData {
   mobileCompatibility: string | null;
   registrationProcess: string | null;
   kycProcess: string | null;
-  features: string[] | null;
-  badgeText: string | null;
-  badgeColor: string | null;
 }
 
 function apiToFormState(brand: BrandApiData): BrandFormState {
@@ -174,19 +124,8 @@ function apiToFormState(brand: BrandApiData): BrandFormState {
     name: asStr(brand.name),
     defaultLogo: asStr(brand.defaultLogo),
     website: asStr(brand.website),
-    defaultRating: brand.defaultRating != null ? String(brand.defaultRating) : "",
     yearEstablished: brand.yearEstablished != null ? String(brand.yearEstablished) : "",
     ownerOperator: asStr(brand.ownerOperator),
-    description: asStr(brand.description),
-    defaultBonus: asStr(brand.defaultBonus),
-    defaultAffiliateUrl: asStr(brand.defaultAffiliateUrl),
-    welcomePackage: asStr(brand.welcomePackage),
-    noDepositBonus: asStr(brand.noDepositBonus),
-    freeSpinsOffer: asStr(brand.freeSpinsOffer),
-    wageringRequirement: asStr(brand.wageringRequirement),
-    terms: asStr(brand.terms),
-    loyaltyProgram: asStr(brand.loyaltyProgram),
-    promotions: asStr(brand.promotions),
     sportsBetting: brand.sportsBetting === true ? "yes" : brand.sportsBetting === false ? "no" : "",
     cryptoCasino: brand.cryptoCasino === true ? "yes" : brand.cryptoCasino === false ? "no" : "",
     vpnAllowed: brand.vpnAllowed === true ? "yes" : brand.vpnAllowed === false ? "no" : "",
@@ -205,11 +144,6 @@ function apiToFormState(brand: BrandApiData): BrandFormState {
     availableCountries: asArr(brand.availableCountries),
     restrictedCountries: asArr(brand.restrictedCountries),
     supportLanguages: asArr(brand.supportLanguages),
-    pros: asArr(brand.pros),
-    cons: asArr(brand.cons),
-    features: asArr(brand.features),
-    badgeText: asStr(brand.badgeText),
-    badgeColor: asStr(brand.badgeColor),
     supportContacts: asStr(brand.supportContacts),
     supportHours: asStr(brand.supportHours),
     license: asStr(brand.license),
@@ -253,26 +187,14 @@ export function useBrandForm() {
   function getSubmitPayload(): Record<string, unknown> {
     const nullIfEmpty = (val: string) => val || null;
     const arrOrNull = (val: string[]) => (val.length > 0 ? val : null);
-    const numOrNull = (val: string) => (val ? parseFloat(val) : null);
     const intOrNull = (val: string) => (val ? parseInt(val, 10) : null);
 
     return {
       name: state.name,
       defaultLogo: nullIfEmpty(state.defaultLogo),
       website: nullIfEmpty(state.website),
-      defaultRating: numOrNull(state.defaultRating),
       yearEstablished: intOrNull(state.yearEstablished),
       ownerOperator: nullIfEmpty(state.ownerOperator),
-      description: nullIfEmpty(state.description),
-      defaultBonus: nullIfEmpty(state.defaultBonus),
-      defaultAffiliateUrl: nullIfEmpty(state.defaultAffiliateUrl),
-      welcomePackage: nullIfEmpty(state.welcomePackage),
-      noDepositBonus: nullIfEmpty(state.noDepositBonus),
-      freeSpinsOffer: nullIfEmpty(state.freeSpinsOffer),
-      wageringRequirement: nullIfEmpty(state.wageringRequirement),
-      terms: nullIfEmpty(state.terms),
-      loyaltyProgram: nullIfEmpty(state.loyaltyProgram),
-      promotions: nullIfEmpty(state.promotions),
       sportsBetting:
         state.sportsBetting === "yes" ? true : state.sportsBetting === "no" ? false : null,
       cryptoCasino:
@@ -295,11 +217,6 @@ export function useBrandForm() {
       availableCountries: arrOrNull(state.availableCountries),
       restrictedCountries: arrOrNull(state.restrictedCountries),
       supportLanguages: arrOrNull(state.supportLanguages),
-      pros: arrOrNull(state.pros),
-      cons: arrOrNull(state.cons),
-      features: arrOrNull(state.features),
-      badgeText: nullIfEmpty(state.badgeText),
-      badgeColor: nullIfEmpty(state.badgeColor),
       supportContacts: nullIfEmpty(state.supportContacts),
       supportHours: nullIfEmpty(state.supportHours),
       license: nullIfEmpty(state.license),

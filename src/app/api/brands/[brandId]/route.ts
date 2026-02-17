@@ -7,9 +7,9 @@ import { updateBrandSchema } from "@/lib/validations";
 
 // JSON fields that need Prisma.JsonNull handling
 const jsonFields = [
-  "pros", "cons", "languages", "availableCountries", "restrictedCountries",
+  "languages", "availableCountries", "restrictedCountries",
   "currencies", "paymentMethods", "gameProviders", "gameTypes",
-  "supportLanguages", "features",
+  "supportLanguages",
 ] as const;
 
 function transformJsonFields(data: Record<string, unknown>) {
@@ -57,14 +57,7 @@ export async function GET(
       name: brand.name,
       defaultLogo: brand.defaultLogo,
       website: brand.website,
-      defaultBonus: brand.defaultBonus,
-      defaultAffiliateUrl: brand.defaultAffiliateUrl,
-      defaultRating: brand.defaultRating ? Number(brand.defaultRating) : null,
-      terms: brand.terms,
       license: brand.license,
-      description: brand.description,
-      pros: brand.pros,
-      cons: brand.cons,
       yearEstablished: brand.yearEstablished,
       ownerOperator: brand.ownerOperator,
       languages: brand.languages,
@@ -76,16 +69,10 @@ export async function GET(
       minDeposit: brand.minDeposit,
       minWithdrawal: brand.minWithdrawal,
       maxWithdrawal: brand.maxWithdrawal,
-      welcomePackage: brand.welcomePackage,
       sportsBetting: brand.sportsBetting,
       cryptoCasino: brand.cryptoCasino,
       vpnAllowed: brand.vpnAllowed,
       kycRequired: brand.kycRequired,
-      noDepositBonus: brand.noDepositBonus,
-      freeSpinsOffer: brand.freeSpinsOffer,
-      wageringRequirement: brand.wageringRequirement,
-      loyaltyProgram: brand.loyaltyProgram,
-      promotions: brand.promotions,
       gameProviders: brand.gameProviders,
       totalGames: brand.totalGames,
       gameTypes: brand.gameTypes,
@@ -96,9 +83,6 @@ export async function GET(
       mobileCompatibility: brand.mobileCompatibility,
       registrationProcess: brand.registrationProcess,
       kycProcess: brand.kycProcess,
-      features: brand.features,
-      badgeText: brand.badgeText,
-      badgeColor: brand.badgeColor,
       usageCount: brand._count.toplistItems,
       createdAt: brand.createdAt.toISOString(),
       updatedAt: brand.updatedAt.toISOString(),
