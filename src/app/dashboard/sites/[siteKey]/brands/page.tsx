@@ -30,6 +30,8 @@ import {
   apiToSiteBrandForm,
   getSiteBrandPayload,
 } from "@/components/dashboard/SiteBrandEditor";
+import { BrandEditor } from "@/components/dashboard/BrandEditor";
+import { useBrandForm } from "@/lib/use-brand-form";
 
 interface SiteBrand {
   siteKey: string;
@@ -61,8 +63,13 @@ export default function SiteBrandsPage() {
   // Create-new-brand state (inside add dialog)
   const [creating, setCreating] = useState(false);
   const [newBrandId, setNewBrandId] = useState("");
-  const [newBrandName, setNewBrandName] = useState("");
   const [createLoading, setCreateLoading] = useState(false);
+  const {
+    state: createBrandForm,
+    updateField: updateCreateField,
+    resetForm: resetCreateForm,
+    getSubmitPayload: getCreatePayload,
+  } = useBrandForm();
 
   // Edit modal state
   const [inlineUrls, setInlineUrls] = useState<Record<string, string>>({});
@@ -118,13 +125,15 @@ export default function SiteBrandsPage() {
   }
 
   async function handleCreateAndAdd() {
-    if (!newBrandId.trim() || !newBrandName.trim()) return;
+    const trimmedId = newBrandId.trim();
+    if (!trimmedId || !createBrandForm.name.trim()) return;
     setCreateLoading(true);
     try {
+      const payload = getCreatePayload();
       const createRes = await fetch("/api/brands", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brandId: newBrandId.trim(), name: newBrandName.trim() }),
+        body: JSON.stringify({ brandId: trimmedId, ...payload }),
       });
       if (!createRes.ok) {
         const data = await createRes.json();
@@ -135,7 +144,7 @@ export default function SiteBrandsPage() {
       const addRes = await fetch(`/api/sites/${siteKey}/brands`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brandId: newBrandId.trim() }),
+        body: JSON.stringify({ brandId: trimmedId }),
       });
       if (addRes.ok) {
         toast.success("Brand created and added to site");
@@ -396,12 +405,12 @@ export default function SiteBrandsPage() {
         if (!open) {
           setCreating(false);
           setNewBrandId("");
-          setNewBrandName("");
+          resetCreateForm();
         }
       }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className={creating ? "sm:max-w-4xl max-h-[85vh] overflow-y-auto" : "sm:max-w-md"}>
           <DialogHeader>
-            <DialogTitle>Add Brand to Site</DialogTitle>
+            <DialogTitle>{creating ? "Create New Brand" : "Add Brand to Site"}</DialogTitle>
           </DialogHeader>
           {creating ? (
             <div className="space-y-4">
@@ -409,21 +418,26 @@ export default function SiteBrandsPage() {
                 <Label htmlFor="new-brand-id">Brand ID</Label>
                 <Input
                   id="new-brand-id"
-                  placeholder="e.g. my-brand"
+                  placeholder="e.g. velobet-casino"
                   value={newBrandId}
-                  onChange={(e) => setNewBrandId(e.target.value)}
+                  onChange={(e) =>
+                    setNewBrandId(
+                      e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-")
+                    )
+                  }
                 />
+                <p className="text-xs text-zinc-500">
+                  Lowercase letters, numbers, and dashes only
+                </p>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-brand-name">Brand Name</Label>
-                <Input
-                  id="new-brand-name"
-                  placeholder="e.g. My Brand"
-                  value={newBrandName}
-                  onChange={(e) => setNewBrandName(e.target.value)}
-                />
-              </div>
-              <DialogFooter className="flex items-center justify-between sm:justify-between">
+
+              <BrandEditor
+                brandId={newBrandId || "new-brand"}
+                state={createBrandForm}
+                updateField={updateCreateField}
+              />
+
+              <DialogFooter className="flex items-center justify-between sm:justify-between border-t pt-4">
                 <button
                   type="button"
                   className="text-sm text-zinc-500 hover:text-zinc-900"
@@ -433,9 +447,9 @@ export default function SiteBrandsPage() {
                 </button>
                 <Button
                   onClick={handleCreateAndAdd}
-                  disabled={createLoading || !newBrandId.trim() || !newBrandName.trim()}
+                  disabled={createLoading || !newBrandId.trim() || !createBrandForm.name.trim()}
                 >
-                  {createLoading ? "Creating..." : "Create & Add"}
+                  {createLoading ? "Creating..." : "Create & Add to Site"}
                 </Button>
               </DialogFooter>
             </div>
