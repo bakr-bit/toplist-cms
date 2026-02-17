@@ -22,6 +22,14 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import {
+  SiteBrandEditor,
+  SiteBrandFormState,
+  SiteBrandApiData,
+  INITIAL_SITE_BRAND_STATE,
+  apiToSiteBrandForm,
+  getSiteBrandPayload,
+} from "@/components/dashboard/SiteBrandEditor";
 
 interface SiteBrand {
   siteKey: string;
@@ -49,6 +57,14 @@ export default function SiteBrandsPage() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [brandSearch, setBrandSearch] = useState("");
+
+  // Edit modal state
+  const [inlineUrls, setInlineUrls] = useState<Record<string, string>>({});
+  const [editBrandId, setEditBrandId] = useState<string | null>(null);
+  const [editBrandName, setEditBrandName] = useState("");
+  const [editForm, setEditForm] = useState<SiteBrandFormState>(INITIAL_SITE_BRAND_STATE);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
 
   async function loadData() {
     try {
@@ -115,6 +131,85 @@ export default function SiteBrandsPage() {
     }
   }
 
+  async function saveInlineUrl(brandId: string) {
+    const newUrl = inlineUrls[brandId];
+    if (newUrl === undefined) return;
+    const existing = siteBrands.find((sb) => sb.brandId === brandId);
+    if (newUrl === (existing?.affiliateUrl ?? "")) return;
+
+    try {
+      const res = await fetch(`/api/sites/${siteKey}/brands/${brandId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ affiliateUrl: newUrl || null }),
+      });
+      if (res.ok) {
+        toast.success("Affiliate URL saved");
+        loadData();
+      } else {
+        toast.error("Failed to save URL");
+      }
+    } catch {
+      toast.error("Failed to save URL");
+    }
+  }
+
+  async function openEditModal(brandId: string, brandName: string) {
+    setEditBrandId(brandId);
+    setEditBrandName(brandName);
+    setEditForm(INITIAL_SITE_BRAND_STATE);
+    setEditLoading(true);
+
+    try {
+      const res = await fetch(`/api/sites/${siteKey}/brands/${brandId}`);
+      if (res.ok) {
+        const data: SiteBrandApiData = await res.json();
+        setEditForm(apiToSiteBrandForm(data));
+      } else {
+        toast.error("Failed to load brand details");
+        setEditBrandId(null);
+      }
+    } catch {
+      toast.error("Failed to load brand details");
+      setEditBrandId(null);
+    } finally {
+      setEditLoading(false);
+    }
+  }
+
+  function updateEditField<K extends keyof SiteBrandFormState>(
+    field: K,
+    value: SiteBrandFormState[K]
+  ) {
+    setEditForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function handleEditSave() {
+    if (!editBrandId) return;
+    setEditSaving(true);
+
+    try {
+      const res = await fetch(`/api/sites/${siteKey}/brands/${editBrandId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(getSiteBrandPayload(editForm)),
+      });
+
+      if (res.ok) {
+        toast.success("Brand updated");
+        setEditBrandId(null);
+        loadData();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to update brand");
+      }
+    } catch {
+      toast.error("Failed to update brand");
+    } finally {
+      setEditSaving(false);
+    }
+  }
+
   const filteredBrands = siteBrands.filter((sb) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
@@ -151,7 +246,7 @@ export default function SiteBrandsPage() {
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900">Brands</h1>
+          <h1 className="text-2xl font-bold text-zinc-900">Site Brands</h1>
           <p className="text-zinc-500">
             {siteBrands.length} brand{siteBrands.length !== 1 ? "s" : ""}{" "}
             associated with this site
@@ -185,12 +280,17 @@ export default function SiteBrandsPage() {
               <TableHead>Brand</TableHead>
               <TableHead>Bonus</TableHead>
               <TableHead>Rating</TableHead>
+              <TableHead>Affiliate URL</TableHead>
               <TableHead className="w-24" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredBrands.map((sb) => (
-              <TableRow key={sb.brandId}>
+              <TableRow
+                key={sb.brandId}
+                className="cursor-pointer hover:bg-zinc-50"
+                onClick={() => openEditModal(sb.brandId, sb.brandName)}
+              >
                 <TableCell>
                   {sb.brandLogo ? (
                     <img
@@ -203,12 +303,9 @@ export default function SiteBrandsPage() {
                   )}
                 </TableCell>
                 <TableCell>
-                  <Link
-                    href={`/dashboard/sites/${siteKey}/brands/${sb.brandId}`}
-                    className="font-medium text-zinc-900 hover:underline"
-                  >
+                  <span className="font-medium text-zinc-900">
                     {sb.brandName}
-                  </Link>
+                  </span>
                   <div className="text-xs text-zinc-400 font-mono">
                     {sb.brandId}
                   </div>
@@ -219,11 +316,30 @@ export default function SiteBrandsPage() {
                 <TableCell className="text-sm text-zinc-600">
                   {sb.rating != null ? sb.rating : "—"}
                 </TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <Input
+                    className="h-8 text-xs font-mono"
+                    placeholder="https://..."
+                    value={inlineUrls[sb.brandId] ?? sb.affiliateUrl ?? ""}
+                    onChange={(e) =>
+                      setInlineUrls((prev) => ({ ...prev, [sb.brandId]: e.target.value }))
+                    }
+                    onBlur={() => saveInlineUrl(sb.brandId)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.currentTarget.blur();
+                      }
+                    }}
+                  />
+                </TableCell>
                 <TableCell>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleRemoveBrand(sb.brandId)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveBrand(sb.brandId);
+                    }}
                   >
                     Remove
                   </Button>
@@ -288,6 +404,32 @@ export default function SiteBrandsPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
               Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editBrandId !== null} onOpenChange={(open) => { if (!open) setEditBrandId(null); }}>
+        <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit — {editBrandName}</DialogTitle>
+          </DialogHeader>
+          {editLoading ? (
+            <div className="py-8 text-center text-zinc-500">Loading...</div>
+          ) : (
+            <SiteBrandEditor
+              brandId={editBrandId ?? ""}
+              siteKey={siteKey}
+              state={editForm}
+              updateField={updateEditField}
+            />
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditBrandId(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditSave} disabled={editLoading || editSaving}>
+              {editSaving ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

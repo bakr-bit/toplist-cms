@@ -133,9 +133,6 @@ export default function SiteDetailPage() {
           )}
         </div>
         <div className="flex gap-2">
-          <Link href={`/dashboard/sites/${siteKey}/brands`}>
-            <Button variant="outline">Brands</Button>
-          </Link>
           <Button
             variant="outline"
             onClick={() => setImportDialogOpen(true)}
@@ -145,6 +142,22 @@ export default function SiteDetailPage() {
           <Button onClick={() => setDialogOpen(true)}>Add Toplist</Button>
         </div>
       </div>
+
+      <Link
+        href={`/dashboard/sites/${siteKey}/brands`}
+        className="flex items-center gap-2 mb-6 w-fit rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:from-violet-700 hover:to-indigo-700 transition-all"
+      >
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
+        </svg>
+        Site Brands
+        <span className="rounded bg-white/20 px-1.5 py-0.5 text-xs">
+          Manage
+        </span>
+      </Link>
+
+      <h2 className="text-lg font-semibold text-zinc-900 mb-4">Toplists</h2>
 
       {site.toplists.length === 0 ? (
         <div className="text-zinc-500">
