@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions, isValidApiKey } from "@/lib/auth";
 import { createBrandSchema } from "@/lib/validations";
-import { isAdmin } from "@/lib/auth";
 
 // JSON fields that need Prisma.JsonNull handling
 const jsonFields = [
@@ -65,15 +64,12 @@ function mapBrandResponse(b: Record<string, unknown> & { _count?: { toplistItems
   };
 }
 
-// GET /api/brands - List all brands (admin-only)
+// GET /api/brands - List all brands (any authenticated user)
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session && !isValidApiKey(request)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    if (session && !isAdmin(session)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const brands = await prisma.brand.findMany({
@@ -95,15 +91,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/brands - Create a new brand (admin-only)
+// POST /api/brands - Create a new brand (any authenticated user)
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session && !isValidApiKey(request)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    if (session && !isAdmin(session)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const body = await request.json();

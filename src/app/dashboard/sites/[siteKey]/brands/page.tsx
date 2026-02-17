@@ -58,6 +58,12 @@ export default function SiteBrandsPage() {
   const [search, setSearch] = useState("");
   const [brandSearch, setBrandSearch] = useState("");
 
+  // Create-new-brand state (inside add dialog)
+  const [creating, setCreating] = useState(false);
+  const [newBrandId, setNewBrandId] = useState("");
+  const [newBrandName, setNewBrandName] = useState("");
+  const [createLoading, setCreateLoading] = useState(false);
+
   // Edit modal state
   const [inlineUrls, setInlineUrls] = useState<Record<string, string>>({});
   const [editBrandId, setEditBrandId] = useState<string | null>(null);
@@ -108,6 +114,41 @@ export default function SiteBrandsPage() {
       }
     } catch {
       toast.error("Failed to add brand");
+    }
+  }
+
+  async function handleCreateAndAdd() {
+    if (!newBrandId.trim() || !newBrandName.trim()) return;
+    setCreateLoading(true);
+    try {
+      const createRes = await fetch("/api/brands", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brandId: newBrandId.trim(), name: newBrandName.trim() }),
+      });
+      if (!createRes.ok) {
+        const data = await createRes.json();
+        toast.error(data.error || "Failed to create brand");
+        return;
+      }
+
+      const addRes = await fetch(`/api/sites/${siteKey}/brands`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brandId: newBrandId.trim() }),
+      });
+      if (addRes.ok) {
+        toast.success("Brand created and added to site");
+        setAddDialogOpen(false);
+        loadData();
+      } else {
+        const data = await addRes.json();
+        toast.error(data.error || "Brand created but failed to add to site");
+      }
+    } catch {
+      toast.error("Failed to create brand");
+    } finally {
+      setCreateLoading(false);
     }
   }
 
@@ -350,62 +391,118 @@ export default function SiteBrandsPage() {
         </Table>
       )}
 
-      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+        setAddDialogOpen(open);
+        if (!open) {
+          setCreating(false);
+          setNewBrandId("");
+          setNewBrandName("");
+        }
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Add Brand to Site</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Search brands</Label>
-              <Input
-                placeholder="Search by name or ID..."
-                value={brandSearch}
-                onChange={(e) => setBrandSearch(e.target.value)}
-              />
+          {creating ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-brand-id">Brand ID</Label>
+                <Input
+                  id="new-brand-id"
+                  placeholder="e.g. my-brand"
+                  value={newBrandId}
+                  onChange={(e) => setNewBrandId(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-brand-name">Brand Name</Label>
+                <Input
+                  id="new-brand-name"
+                  placeholder="e.g. My Brand"
+                  value={newBrandName}
+                  onChange={(e) => setNewBrandName(e.target.value)}
+                />
+              </div>
+              <DialogFooter className="flex items-center justify-between sm:justify-between">
+                <button
+                  type="button"
+                  className="text-sm text-zinc-500 hover:text-zinc-900"
+                  onClick={() => setCreating(false)}
+                >
+                  &larr; Back to list
+                </button>
+                <Button
+                  onClick={handleCreateAndAdd}
+                  disabled={createLoading || !newBrandId.trim() || !newBrandName.trim()}
+                >
+                  {createLoading ? "Creating..." : "Create & Add"}
+                </Button>
+              </DialogFooter>
             </div>
-            <div className="max-h-64 overflow-y-auto space-y-1">
-              {availableBrands.length === 0 ? (
-                <p className="text-sm text-zinc-500 py-2">
-                  No available brands found
-                </p>
-              ) : (
-                availableBrands.slice(0, 20).map((brand) => (
-                  <button
-                    key={brand.brandId}
-                    onClick={() => handleAddBrand(brand.brandId)}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded hover:bg-zinc-100 text-left"
-                  >
-                    {brand.defaultLogo ? (
-                      <img
-                        src={brand.defaultLogo}
-                        alt={brand.name}
-                        className="h-6 w-12 object-contain"
-                      />
-                    ) : (
-                      <div className="h-6 w-12 bg-zinc-100 rounded" />
-                    )}
-                    <div>
-                      <div className="text-sm font-medium">{brand.name}</div>
-                      <div className="text-xs text-zinc-400 font-mono">
-                        {brand.brandId}
-                      </div>
-                    </div>
-                  </button>
-                ))
-              )}
-              {availableBrands.length > 20 && (
-                <p className="text-xs text-zinc-400 py-1 text-center">
-                  Showing 20 of {availableBrands.length} — refine your search
-                </p>
-              )}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
-              Cancel
-            </Button>
-          </DialogFooter>
+          ) : (
+            <>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Search brands</Label>
+                  <Input
+                    placeholder="Search by name or ID..."
+                    value={brandSearch}
+                    onChange={(e) => setBrandSearch(e.target.value)}
+                  />
+                </div>
+                <div className="max-h-64 overflow-y-auto space-y-1">
+                  {availableBrands.length === 0 ? (
+                    <p className="text-sm text-zinc-500 py-2">
+                      No available brands found
+                    </p>
+                  ) : (
+                    availableBrands.slice(0, 20).map((brand) => (
+                      <button
+                        key={brand.brandId}
+                        onClick={() => handleAddBrand(brand.brandId)}
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded hover:bg-zinc-100 text-left"
+                      >
+                        {brand.defaultLogo ? (
+                          <img
+                            src={brand.defaultLogo}
+                            alt={brand.name}
+                            className="h-6 w-12 object-contain"
+                          />
+                        ) : (
+                          <div className="h-6 w-12 bg-zinc-100 rounded" />
+                        )}
+                        <div>
+                          <div className="text-sm font-medium">{brand.name}</div>
+                          <div className="text-xs text-zinc-400 font-mono">
+                            {brand.brandId}
+                          </div>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                  {availableBrands.length > 20 && (
+                    <p className="text-xs text-zinc-400 py-1 text-center">
+                      Showing 20 of {availableBrands.length} — refine your search
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="border-t pt-3">
+                <button
+                  type="button"
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  onClick={() => setCreating(true)}
+                >
+                  + Create new brand
+                </button>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
