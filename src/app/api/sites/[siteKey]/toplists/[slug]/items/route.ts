@@ -3,8 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions, isValidApiKey } from "@/lib/auth";
 import { updateToplistItemsSchema } from "@/lib/validations";
+import { canAccessSite } from "@/lib/auth";
 
-// GET /api/sites/[siteKey]/toplists/[slug]/items - Get raw item data for editor (protected)
+// GET /api/sites/[siteKey]/toplists/[slug]/items - Get raw item data for editor (site-scoped)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ siteKey: string; slug: string }> }
@@ -16,6 +17,10 @@ export async function GET(
     }
 
     const { siteKey, slug } = await params;
+
+    if (session && !canAccessSite(session, siteKey)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const toplist = await prisma.toplist.findUnique({
       where: {
@@ -104,7 +109,7 @@ export async function GET(
   }
 }
 
-// PUT /api/sites/[siteKey]/toplists/[slug]/items - Replace all items (protected)
+// PUT /api/sites/[siteKey]/toplists/[slug]/items - Replace all items (site-scoped)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ siteKey: string; slug: string }> }
@@ -116,6 +121,10 @@ export async function PUT(
     }
 
     const { siteKey, slug } = await params;
+
+    if (session && !canAccessSite(session, siteKey)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const body = await request.json();
 
     const validation = updateToplistItemsSchema.safeParse(body);

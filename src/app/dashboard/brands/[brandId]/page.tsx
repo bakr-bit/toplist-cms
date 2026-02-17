@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { BrandEditor } from "@/components/dashboard/BrandEditor";
@@ -11,6 +12,14 @@ import { useBrandForm, BrandApiData } from "@/lib/use-brand-form";
 export default function BrandEditorPage() {
   const params = useParams();
   const brandId = params.brandId as string;
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.role !== "admin") {
+      router.replace("/dashboard/sites");
+    }
+  }, [status, session, router]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

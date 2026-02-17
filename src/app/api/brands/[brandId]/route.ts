@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions, isValidApiKey } from "@/lib/auth";
 import { updateBrandSchema } from "@/lib/validations";
+import { isAdmin } from "@/lib/auth";
 
 // JSON fields that need Prisma.JsonNull handling
 const jsonFields = [
@@ -26,7 +27,7 @@ function transformJsonFields(data: Record<string, unknown>) {
   return result;
 }
 
-// GET /api/brands/[brandId] - Get a specific brand (protected)
+// GET /api/brands/[brandId] - Get a specific brand (admin-only)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ brandId: string }> }
@@ -35,6 +36,9 @@ export async function GET(
     const session = await getServerSession(authOptions);
     if (!session && !isValidApiKey(request)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (session && !isAdmin(session)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { brandId } = await params;
@@ -96,7 +100,7 @@ export async function GET(
   }
 }
 
-// PUT /api/brands/[brandId] - Update a brand (protected)
+// PUT /api/brands/[brandId] - Update a brand (admin-only)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ brandId: string }> }
@@ -105,6 +109,9 @@ export async function PUT(
     const session = await getServerSession(authOptions);
     if (!session && !isValidApiKey(request)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (session && !isAdmin(session)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { brandId } = await params;
@@ -135,7 +142,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/brands/[brandId] - Delete a brand (protected)
+// DELETE /api/brands/[brandId] - Delete a brand (admin-only)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ brandId: string }> }
@@ -144,6 +151,9 @@ export async function DELETE(
     const session = await getServerSession(authOptions);
     if (!session && !isValidApiKey(request)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (session && !isAdmin(session)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { brandId } = await params;

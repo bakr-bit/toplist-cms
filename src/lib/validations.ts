@@ -148,6 +148,23 @@ export const updateToplistItemsSchema = z.object({
   items: z.array(toplistItemSchema),
 });
 
+// User schemas
+export const createUserSchema = z.object({
+  email: z.string().email().max(200),
+  password: z.string().min(8).max(200),
+  name: z.string().max(200).optional().nullable(),
+  role: z.enum(["admin", "editor"]).default("editor"),
+  sites: z.array(z.string()).optional(),
+});
+
+export const updateUserSchema = z.object({
+  email: z.string().email().max(200).optional(),
+  password: z.string().min(8).max(200).optional(),
+  name: z.string().max(200).optional().nullable(),
+  role: z.enum(["admin", "editor"]).optional(),
+  sites: z.array(z.string()).optional(),
+});
+
 // Helper to convert domain to siteKey
 export function domainToSiteKey(domain: string): string {
   return domain.toLowerCase().replace(/\./g, "-");
@@ -165,3 +182,5 @@ export type CreateToplistInput = z.infer<typeof createToplistSchema>;
 export type UpdateToplistInput = z.infer<typeof updateToplistSchema>;
 export type ToplistItemInput = z.infer<typeof toplistItemSchema>;
 export type UpdateToplistItemsInput = z.infer<typeof updateToplistItemsSchema>;
+export type CreateUserInput = z.infer<typeof createUserSchema>;
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;

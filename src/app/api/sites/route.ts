@@ -4,8 +4,9 @@ import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions, isValidApiKey } from "@/lib/auth";
 import { createSiteSchema, domainToSiteKey } from "@/lib/validations";
+import { isAdmin } from "@/lib/auth";
 
-// GET /api/sites - List all sites (protected)
+// GET /api/sites - List sites (admin sees all, editor sees assigned only)
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,7 +14,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const where = session && !isAdmin(session)
+      ? { siteKey: { in: session.user.sites } }
+      : {};
+
     const sites = await prisma.site.findMany({
+      where,
       include: {
         _count: {
           select: { toplists: true },
@@ -41,12 +47,15 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/sites - Create a new site (protected)
+// POST /api/sites - Create a new site (admin-only)
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session && !isValidApiKey(request)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (session && !isAdmin(session)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const body = await request.json();

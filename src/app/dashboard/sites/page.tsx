@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteDialog } from "@/components/dashboard/SiteDialog";
@@ -21,6 +22,8 @@ interface Site {
 }
 
 export default function SitesPage() {
+  const { data: session } = useSession();
+  const isAdminUser = session?.user?.role === "admin";
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -68,7 +71,9 @@ export default function SitesPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-zinc-900">Sites</h1>
-        <Button onClick={() => { setEditingSite(null); setDialogOpen(true); }}>Add Site</Button>
+        {isAdminUser && (
+          <Button onClick={() => { setEditingSite(null); setDialogOpen(true); }}>Add Site</Button>
+        )}
       </div>
 
       {loading ? (
@@ -119,22 +124,24 @@ export default function SitesPage() {
                 <p className="text-sm text-zinc-500 mb-4">
                   {site.toplistCount} toplist{site.toplistCount !== 1 ? "s" : ""}
                 </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => { e.preventDefault(); setEditingSite(site); setDialogOpen(true); }}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => { e.preventDefault(); handleDelete(site.siteKey); }}
-                  >
-                    Delete
-                  </Button>
-                </div>
+                {isAdminUser && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => { e.preventDefault(); setEditingSite(site); setDialogOpen(true); }}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => { e.preventDefault(); handleDelete(site.siteKey); }}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
             </Link>

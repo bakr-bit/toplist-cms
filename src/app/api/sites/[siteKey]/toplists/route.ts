@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions, isValidApiKey } from "@/lib/auth";
 import { createToplistSchema } from "@/lib/validations";
+import { canAccessSite } from "@/lib/auth";
 
 // GET /api/sites/[siteKey]/toplists - List all toplists for a site (protected)
 export async function GET(
@@ -42,7 +43,7 @@ export async function GET(
   }
 }
 
-// POST /api/sites/[siteKey]/toplists - Create a new toplist (protected)
+// POST /api/sites/[siteKey]/toplists - Create a new toplist (site-scoped)
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ siteKey: string }> }
@@ -54,6 +55,10 @@ export async function POST(
     }
 
     const { siteKey } = await params;
+
+    if (session && !canAccessSite(session, siteKey)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const body = await request.json();
 
     const validation = createToplistSchema.safeParse(body);

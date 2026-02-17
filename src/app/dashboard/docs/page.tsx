@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Highlight, themes } from "prism-react-renderer";
 import { toast } from "sonner";
 
@@ -62,6 +64,15 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
 }
 
 export default function DocsPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.role !== "admin") {
+      router.replace("/dashboard/sites");
+    }
+  }, [status, session, router]);
+
   return (
     <div className="max-w-4xl">
       <h1 className="mb-6 text-2xl font-bold text-zinc-900">

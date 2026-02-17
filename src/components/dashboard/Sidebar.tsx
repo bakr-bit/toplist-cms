@@ -2,12 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
-const navigation = [
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  adminOnly?: boolean;
+}
+
+const navigation: NavItem[] = [
   { name: "Sites", href: "/dashboard/sites", icon: GlobeIcon },
-  { name: "All Brands", href: "/dashboard/brands", icon: TagIcon },
-  { name: "Docs", href: "/dashboard/docs", icon: DocIcon },
+  { name: "All Brands", href: "/dashboard/brands", icon: TagIcon, adminOnly: true },
+  { name: "Users", href: "/dashboard/users", icon: UsersIcon, adminOnly: true },
+  { name: "Docs", href: "/dashboard/docs", icon: DocIcon, adminOnly: true },
 ];
 
 function HomeIcon({ className }: { className?: string }) {
@@ -43,8 +52,22 @@ function DocIcon({ className }: { className?: string }) {
   );
 }
 
+function UsersIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+    </svg>
+  );
+}
+
 export function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const isAdminUser = session?.user?.role === "admin";
+
+  const visibleNav = navigation.filter(
+    (item) => !item.adminOnly || isAdminUser
+  );
 
   return (
     <div className="flex h-full w-64 flex-col bg-zinc-900">
@@ -52,7 +75,7 @@ export function Sidebar() {
         <h1 className="text-xl font-bold text-white">Toplist Manager</h1>
       </div>
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navigation.map((item) => {
+        {visibleNav.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link

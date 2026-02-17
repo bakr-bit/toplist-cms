@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions, isValidApiKey } from "@/lib/auth";
 import { createSiteBrandSchema } from "@/lib/validations";
+import { canAccessSite } from "@/lib/auth";
 
 // JSON fields that need Prisma.JsonNull handling
 const jsonFields = ["pros", "cons", "features"] as const;
@@ -22,7 +23,7 @@ function transformJsonFields(data: Record<string, unknown>) {
   return result;
 }
 
-// GET /api/sites/[siteKey]/brands - List all SiteBrands for a site (protected)
+// GET /api/sites/[siteKey]/brands - List all SiteBrands for a site (site-scoped)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ siteKey: string }> }
@@ -34,6 +35,10 @@ export async function GET(
     }
 
     const { siteKey } = await params;
+
+    if (session && !canAccessSite(session, siteKey)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const siteBrands = await prisma.siteBrand.findMany({
       where: { siteKey },
@@ -86,7 +91,7 @@ export async function GET(
   }
 }
 
-// POST /api/sites/[siteKey]/brands - Create a SiteBrand (protected)
+// POST /api/sites/[siteKey]/brands - Create a SiteBrand (site-scoped)
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ siteKey: string }> }
@@ -98,6 +103,10 @@ export async function POST(
     }
 
     const { siteKey } = await params;
+
+    if (session && !canAccessSite(session, siteKey)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const body = await request.json();
 
     const validation = createSiteBrandSchema.safeParse(body);

@@ -54,6 +54,7 @@ model Site {
 
   toplists   Toplist[]
   siteBrands SiteBrand[]
+  users      UserSite[]
 }
 
 model Toplist {
@@ -134,5 +135,17 @@ model User {
   email        String   @unique
   passwordHash String
   name         String?
+  role         String   @default("editor")
   createdAt    DateTime @default(now())
+
+  sites UserSite[]
+}
+
+model UserSite {
+  userId  String
+  siteKey String
+  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  site    Site @relation(fields: [siteKey], references: [siteKey], onDelete: Cascade)
+
+  @@id([userId, siteKey])
 }

@@ -12,6 +12,18 @@ export function isValidApiKey(request: Request): boolean {
   return !!apiKey && apiKey === process.env.SERVICE_API_KEY;
 }
 
+export function isAdmin(session: { user: { role?: string } }): boolean {
+  return session.user.role === "admin";
+}
+
+export function canAccessSite(
+  session: { user: { role?: string; sites?: string[] } },
+  siteKey: string
+): boolean {
+  if (session.user.role === "admin") return true;
+  return session.user.sites?.includes(siteKey) ?? false;
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -28,6 +40,9 @@ export const authOptions: NextAuthOptions = {
 
           const user = await prisma.user.findUnique({
             where: { email: credentials.email },
+            include: {
+              sites: { select: { siteKey: true } },
+            },
           });
 
           if (!user) {
@@ -47,6 +62,8 @@ export const authOptions: NextAuthOptions = {
             id: user.id,
             email: user.email,
             name: user.name,
+            role: user.role,
+            sites: user.sites.map((s) => s.siteKey),
           };
         } catch {
           return null;
@@ -65,12 +82,16 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = user.role;
+        token.sites = user.sites;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.role = token.role as string;
+        session.user.sites = token.sites as string[];
       }
       return session;
     },
@@ -81,12 +102,16 @@ export const authOptions: NextAuthOptions = {
 declare module "next-auth" {
   interface User {
     id: string;
+    role: string;
+    sites: string[];
   }
   interface Session {
     user: {
       id: string;
       email?: string | null;
       name?: string | null;
+      role: string;
+      sites: string[];
     };
   }
 }
@@ -94,5 +119,7 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
+    role: string;
+    sites: string[];
   }
 }

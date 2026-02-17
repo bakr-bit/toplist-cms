@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions, isValidApiKey } from "@/lib/auth";
 import { updateSiteBrandSchema } from "@/lib/validations";
+import { canAccessSite } from "@/lib/auth";
 
 // JSON fields that need Prisma.JsonNull handling
 const jsonFields = ["pros", "cons", "features"] as const;
@@ -22,7 +23,7 @@ function transformJsonFields(data: Record<string, unknown>) {
   return result;
 }
 
-// GET /api/sites/[siteKey]/brands/[brandId] - Get one SiteBrand (protected)
+// GET /api/sites/[siteKey]/brands/[brandId] - Get one SiteBrand (site-scoped)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ siteKey: string; brandId: string }> }
@@ -34,6 +35,10 @@ export async function GET(
     }
 
     const { siteKey, brandId } = await params;
+
+    if (session && !canAccessSite(session, siteKey)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const siteBrand = await prisma.siteBrand.findUnique({
       where: {
@@ -92,7 +97,7 @@ export async function GET(
   }
 }
 
-// PUT /api/sites/[siteKey]/brands/[brandId] - Update SiteBrand deal data (protected)
+// PUT /api/sites/[siteKey]/brands/[brandId] - Update SiteBrand deal data (site-scoped)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ siteKey: string; brandId: string }> }
@@ -104,6 +109,10 @@ export async function PUT(
     }
 
     const { siteKey, brandId } = await params;
+
+    if (session && !canAccessSite(session, siteKey)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const body = await request.json();
 
     const validation = updateSiteBrandSchema.safeParse(body);
@@ -133,7 +142,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/sites/[siteKey]/brands/[brandId] - Remove brand from site (protected)
+// DELETE /api/sites/[siteKey]/brands/[brandId] - Remove brand from site (site-scoped)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ siteKey: string; brandId: string }> }
@@ -145,6 +154,10 @@ export async function DELETE(
     }
 
     const { siteKey, brandId } = await params;
+
+    if (session && !canAccessSite(session, siteKey)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     // Check if brand is used in any toplist for this site
     const usageCount = await prisma.toplistItem.count({

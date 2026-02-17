@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions, isValidApiKey } from "@/lib/auth";
 import { updateToplistSchema } from "@/lib/validations";
+import { canAccessSite } from "@/lib/auth";
 
 // CORS headers for public endpoint
 const corsHeaders = {
@@ -135,7 +136,7 @@ export async function GET(
   }
 }
 
-// PUT /api/sites/[siteKey]/toplists/[slug] - Update toplist metadata (protected)
+// PUT /api/sites/[siteKey]/toplists/[slug] - Update toplist metadata (site-scoped)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ siteKey: string; slug: string }> }
@@ -147,6 +148,10 @@ export async function PUT(
     }
 
     const { siteKey, slug } = await params;
+
+    if (session && !canAccessSite(session, siteKey)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const body = await request.json();
 
     const validation = updateToplistSchema.safeParse(body);
@@ -183,7 +188,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/sites/[siteKey]/toplists/[slug] - Delete toplist (protected)
+// DELETE /api/sites/[siteKey]/toplists/[slug] - Delete toplist (site-scoped)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ siteKey: string; slug: string }> }
@@ -195,6 +200,10 @@ export async function DELETE(
     }
 
     const { siteKey, slug } = await params;
+
+    if (session && !canAccessSite(session, siteKey)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     await prisma.toplist.delete({
       where: {

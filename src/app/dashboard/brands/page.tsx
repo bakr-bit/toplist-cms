@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -99,6 +101,15 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export default function BrandsPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.role !== "admin") {
+      router.replace("/dashboard/sites");
+    }
+  }, [status, session, router]);
+
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { authOptions, isAdmin } from "@/lib/auth";
 import { z } from "zod";
 import { uploadToR2 } from "@/lib/r2";
 import { processImage, generateImageKey } from "@/lib/image";
@@ -75,12 +75,15 @@ const importSchema = z.object({
   brands: z.record(z.string(), importBrandSchema),
 });
 
-// POST /api/brands/import - Import brands from JSON (protected)
+// POST /api/brands/import - Import brands from JSON (admin-only)
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (!isAdmin(session)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     let body;

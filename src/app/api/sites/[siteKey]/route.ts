@@ -4,8 +4,9 @@ import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions, isValidApiKey } from "@/lib/auth";
 import { updateSiteSchema } from "@/lib/validations";
+import { isAdmin, canAccessSite } from "@/lib/auth";
 
-// GET /api/sites/[siteKey] - Get a specific site with toplists (protected)
+// GET /api/sites/[siteKey] - Get a specific site with toplists (site-scoped)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ siteKey: string }> }
@@ -17,6 +18,10 @@ export async function GET(
     }
 
     const { siteKey } = await params;
+
+    if (session && !canAccessSite(session, siteKey)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const site = await prisma.site.findUnique({
       where: { siteKey },
@@ -61,7 +66,7 @@ export async function GET(
   }
 }
 
-// PUT /api/sites/[siteKey] - Update a site (protected)
+// PUT /api/sites/[siteKey] - Update a site (site-scoped)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ siteKey: string }> }
@@ -73,6 +78,10 @@ export async function PUT(
     }
 
     const { siteKey } = await params;
+
+    if (session && !canAccessSite(session, siteKey)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const body = await request.json();
 
     const validation = updateSiteSchema.safeParse(body);
@@ -107,7 +116,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/sites/[siteKey] - Delete a site (protected, cascades toplists)
+// DELETE /api/sites/[siteKey] - Delete a site (admin-only, cascades toplists)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ siteKey: string }> }
@@ -116,6 +125,9 @@ export async function DELETE(
     const session = await getServerSession(authOptions);
     if (!session && !isValidApiKey(request)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (session && !isAdmin(session)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { siteKey } = await params;

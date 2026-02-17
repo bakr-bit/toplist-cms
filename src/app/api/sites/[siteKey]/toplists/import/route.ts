@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { authOptions, canAccessSite } from "@/lib/auth";
 import { z } from "zod";
 
 // Schema for validating toplist import JSON
@@ -28,7 +28,7 @@ const importToplistSchema = z.object({
   pageMapping: z.record(z.string(), z.array(z.string())),
 });
 
-// POST /api/sites/[siteKey]/toplists/import - Import toplists from JSON (protected)
+// POST /api/sites/[siteKey]/toplists/import - Import toplists from JSON (site-scoped)
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ siteKey: string }> }
@@ -40,6 +40,10 @@ export async function POST(
     }
 
     const { siteKey } = await params;
+
+    if (!canAccessSite(session, siteKey)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     // Check if site exists
     const site = await prisma.site.findUnique({
