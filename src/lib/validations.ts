@@ -150,7 +150,7 @@ export const updateToplistItemsSchema = z.object({
 
 // User schemas
 export const createUserSchema = z.object({
-  email: z.string().email().max(200),
+  email: z.string().min(1).max(200),
   password: z.string().min(8).max(200),
   name: z.string().max(200).optional().nullable(),
   role: z.enum(["admin", "editor"]).default("editor"),
@@ -158,7 +158,7 @@ export const createUserSchema = z.object({
 });
 
 export const updateUserSchema = z.object({
-  email: z.string().email().max(200).optional(),
+  email: z.string().min(1).max(200).optional(),
   password: z.string().min(8).max(200).optional(),
   name: z.string().max(200).optional().nullable(),
   role: z.enum(["admin", "editor"]).optional(),
