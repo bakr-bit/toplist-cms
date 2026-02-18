@@ -38,7 +38,7 @@ interface UserDialogProps {
   onOpenChange: (open: boolean) => void;
   user: UserData | null;
   sites: SiteOption[];
-  onSuccess: () => void;
+  onSuccess: (credentials?: { username: string; password: string }) => void;
 }
 
 export function UserDialog({
@@ -111,7 +111,7 @@ export function UserDialog({
 
       if (res.ok) {
         onOpenChange(false);
-        onSuccess();
+        onSuccess(password ? { username: email, password } : undefined);
       } else {
         const data = await res.json();
         toast.error(data.error || "Failed to save user");

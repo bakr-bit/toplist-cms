@@ -12,6 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { UserDialog } from "@/components/dashboard/UserDialog";
 import { toast } from "sonner";
 
@@ -37,6 +44,7 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null);
 
   useEffect(() => {
     if (status === "authenticated" && session?.user?.role !== "admin") {
@@ -87,6 +95,25 @@ export default function UsersPage() {
       }
     } catch {
       toast.error("Failed to delete user");
+    }
+  }
+
+  async function handleResetPassword(user: User) {
+    const newPassword = crypto.randomUUID().slice(0, 16);
+    try {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: newPassword }),
+      });
+      if (res.ok) {
+        setCredentials({ username: user.email, password: newPassword });
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to reset password");
+      }
+    } catch {
+      toast.error("Failed to reset password");
     }
   }
 
@@ -171,6 +198,13 @@ export default function UsersPage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => handleResetPassword(user)}
+                      >
+                        Reset Password
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleDelete(user.id)}
                         disabled={user.id === session?.user?.id}
                       >
@@ -190,11 +224,68 @@ export default function UsersPage() {
         onOpenChange={setDialogOpen}
         user={editingUser}
         sites={sites}
-        onSuccess={() => {
+        onSuccess={(creds) => {
           loadData();
           toast.success(editingUser ? "User updated" : "User created");
+          if (creds) {
+            setCredentials(creds);
+          }
         }}
       />
+
+      <Dialog open={credentials !== null} onOpenChange={(open) => { if (!open) setCredentials(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Login Credentials</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-zinc-500">
+            Share these credentials with the user. The password cannot be retrieved later.
+          </p>
+          {credentials && (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-zinc-500">Username</label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 rounded bg-zinc-100 px-3 py-2 text-sm font-mono">
+                    {credentials.username}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(credentials.username);
+                      toast.success("Username copied");
+                    }}
+                  >
+                    Copy
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-zinc-500">Password</label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 rounded bg-zinc-100 px-3 py-2 text-sm font-mono">
+                    {credentials.password}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(credentials.password);
+                      toast.success("Password copied");
+                    }}
+                  >
+                    Copy
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setCredentials(null)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
