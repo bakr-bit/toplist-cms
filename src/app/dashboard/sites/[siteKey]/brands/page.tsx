@@ -135,7 +135,6 @@ export default function SiteBrandsPage() {
       for (const [k, v] of Object.entries(full)) {
         if (v != null) payload[k] = v;
       }
-      console.log("[create-brand] payload:", JSON.stringify(payload, null, 2));
       const createRes = await fetch("/api/brands", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

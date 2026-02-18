@@ -102,8 +102,11 @@ export function BrandEditor({ brandId, state, updateField }: BrandEditorProps) {
             type="url"
             value={state.website}
             onChange={(e) => updateField("website", e.target.value)}
-            placeholder="https://..."
+            placeholder="https://example.com"
           />
+          <p className="text-xs text-zinc-500">
+            Must include protocol (https://)
+          </p>
         </div>
 
         <div className="space-y-2">
