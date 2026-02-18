@@ -129,11 +129,16 @@ export default function SiteBrandsPage() {
     if (!trimmedId || !createBrandForm.name.trim()) return;
     setCreateLoading(true);
     try {
-      const payload = getCreatePayload();
+      const full = getCreatePayload();
+      // Strip null values — createBrandSchema expects absent keys, not explicit nulls
+      const payload: Record<string, unknown> = { brandId: trimmedId };
+      for (const [k, v] of Object.entries(full)) {
+        if (v != null) payload[k] = v;
+      }
       const createRes = await fetch("/api/brands", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brandId: trimmedId, ...payload }),
+        body: JSON.stringify(payload),
       });
       if (!createRes.ok) {
         const data = await createRes.json();
